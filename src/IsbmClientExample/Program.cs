@@ -22,82 +22,62 @@ var requestBody = new List<Dictionary<String, Object>>();
 Console.WriteLine("Base Path: {0}", apiInstance.GetBasePath());
 Console.WriteLine("Channel URI: {0}", channelUri);
 
+SimpleIsbm2.SimpleClient client = new SimpleIsbm2.SimpleClient(config);
+
 try
 {
     // Retrieve the channel, creating it if necessary.
     Channel channel;
     try {
-        channel = apiInstance.GetChannel(channelUri);
+        channel = client.GetChannel(channelUri);
     }
     catch (ApiException ex) {
         if (ex.ErrorCode != 404) throw ex;
         Console.WriteLine("Channel does not exist. Creating publication channel '{0}'", channelUri);
-        Trace.Indent();
-        var toBeChannel = new Channel(channelUri, ChannelType.Publication, "A test channel");
-        Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    "));
-        Trace.Unindent();
-
-        channel = apiInstance.CreateChannel(toBeChannel);
+        channel = client.CreateChannel(channelUri, ChannelType.Publication, "A test channel");
     }
     Console.WriteLine("\nRetrieved channel:\n    {0}", channel.ToString().ReplaceLineEndings("\n    "));
 
     // Subscribe to the channel
-    var subscription = new Session();
-    subscription.Topics = new List<string>(topics);
-    Console.WriteLine("\nOpening subscription session:\n    {0}", subscription.ToJson().ReplaceLineEndings("\n    "));
-    subscription = subscriberApi.OpenSubscriptionSession(channelUri, subscription);
+    var subscription = client.OpenSubscriptionSession(channelUri, topics);
     Console.WriteLine("\nSubscription session opened:\n    {0}", subscription.ToJson().ReplaceLineEndings("\n    "));
 
     // Publish a message to the channel
-    var session = publisherApi.OpenPublicationSession(channelUri);
+    var session = client.OpenPublicationSession(channelUri);
     Console.WriteLine("\nPublication session opened:\n    {0}", session.ToJson().ReplaceLineEndings("\n    "));
-    var content = new MessageContent[] {
-        new MessageContent(mediaType: "text/plain", content: new MessageContentContent("Hello World!")),
-        new MessageContent(mediaType: "application/json", content: new MessageContentContent(new Dictionary<string, object>(
+
+    var contents = new object[] {
+        "Hello World!",
+        new Dictionary<string, object>(
             new KeyValuePair<string, object>[] {
                 new KeyValuePair<string, object>("hello", "world"),
                 new KeyValuePair<string, object>("someProperty", 1)
             }
-        )))
+        )
     };
-    foreach(var c in content) {
-        var publication = new Message(messageContent: c, topics: new List<string>(topics), expiry: "PT1H", messageType: MessageType.Publication);
-        Console.WriteLine("\nPosting publication:\n    {0}", publication.ToJson().ReplaceLineEndings("\n    "));
-        publisherApi.PostPublication(session.SessionId, publication);
+    foreach(var content in contents) {
+        var message = client.PostPublication(session.SessionId, content, topics, "PT1H");
+        Console.WriteLine("Posted: {0}", message.MessageId);
     }
 
     // Read the message and remove it
-    string? removeResult = null;
-    do {
-        Console.WriteLine("\nReading publication:");
-        var readMessage = subscriberApi.ReadPublication(subscription.SessionId);
-        Console.WriteLine("\n    {0}", readMessage?.ToJson()?.ReplaceLineEndings("\n    "));
-        Console.Write("Removing publication... ");
-        subscriberApi.RemovePublication(subscription.SessionId);
-        removeResult = null;
-        try {
-            var readAgain = subscriberApi.ReadPublication(subscription.SessionId);
-            removeResult = readAgain.MessageId == readMessage.MessageId
-                ? "Failed. Message not removed."
-                : "Success. Next message in queue.";
+    try {
+        var messages = client.ReadAllPublications(subscription.SessionId);
+        foreach (var message in messages) {
+            Console.WriteLine("\nRead publication:\n    {0}", message.ToJson().ReplaceLineEndings("\n    "));
         }
-        catch(ApiException readError) {
-            removeResult = readError.ErrorCode != 404
-                ? string.Format("Failed. Unexepected error {0}\n{1}", readError.Message, readError.StackTrace)
-                : "Success. No messages in queue";
-        }
-        removeResult ??= "Unexpected outcome";
-        Console.WriteLine(removeResult);
     }
-    while (removeResult?.Contains("Next message") ?? false);
+    catch(ApiException readError) {
+        Console.WriteLine("Failed. Unexepected error {0}\n{1}", readError.Message, readError.StackTrace);
+    }
 
     // Delete the channel if desired
     Console.WriteLine("Cleaning up.");
-    apiInstance.DeleteChannel(channelUri);
+    client.DeleteChannel(channelUri);
 }
 catch (ApiException e)
 {
-    Console.WriteLine("Exception when calling ChannelManagementApi: " + e.Message );
+    Console.WriteLine("Exception when calling SimpleClient: " + e.Message );
     Console.WriteLine("Status Code: "+ e.ErrorCode);
     Console.WriteLine(e.StackTrace);
 }
