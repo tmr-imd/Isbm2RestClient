@@ -67,25 +67,29 @@ try
     }
 
     // Read the message and remove it
-    Console.WriteLine("\nReading publication:");
-    var readMessage = subscriberApi.ReadPublication(subscription.SessionId);
-    Console.WriteLine("\n    {0}", readMessage?.ToJson()?.ReplaceLineEndings("\n    "));
-    Console.Write("Removing publication... ");
-    subscriberApi.RemovePublication(subscription.SessionId);
     string? removeResult = null;
-    try {
-        var readAgain = subscriberApi.ReadPublication(subscription.SessionId);
-        removeResult = readAgain.MessageId == readMessage.MessageId
-            ? "Failed. Message not removed."
-            : "Success. Next message in queue.";
+    do {
+        Console.WriteLine("\nReading publication:");
+        var readMessage = subscriberApi.ReadPublication(subscription.SessionId);
+        Console.WriteLine("\n    {0}", readMessage?.ToJson()?.ReplaceLineEndings("\n    "));
+        Console.Write("Removing publication... ");
+        subscriberApi.RemovePublication(subscription.SessionId);
+        removeResult = null;
+        try {
+            var readAgain = subscriberApi.ReadPublication(subscription.SessionId);
+            removeResult = readAgain.MessageId == readMessage.MessageId
+                ? "Failed. Message not removed."
+                : "Success. Next message in queue.";
+        }
+        catch(ApiException readError) {
+            removeResult = readError.ErrorCode != 404
+                ? string.Format("Failed. Unexepected error {0}\n{1}", readError.Message, readError.StackTrace)
+                : "Success. No messages in queue";
+        }
+        removeResult ??= "Unexpected outcome";
+        Console.WriteLine(removeResult);
     }
-    catch(ApiException readError) {
-        removeResult = readError.ErrorCode != 404
-            ? string.Format("Failed. Unexepected error {0}\n{1}", readError.Message, readError.StackTrace)
-            : "Success. No messages in queue";
-    }
-    removeResult ??= "Unexpected outcome";
-    Console.WriteLine(removeResult);
+    while (removeResult?.Contains("Next message") ?? false);
 
     // Delete the channel if desired
     Console.WriteLine("Cleaning up.");
