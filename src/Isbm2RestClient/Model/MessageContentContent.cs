@@ -273,11 +273,35 @@ namespace Isbm2RestClient.Model
         /// <returns>The object converted from the JSON string</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if(reader.TokenType != JsonToken.Null)
-            {
+            if (!MoveToContent(reader)) return null;
+            return ReadStringOrObject(reader, objectType, existingValue, serializer);
+        }
+
+        private object ReadStringOrObject(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            // XXX: Generated code expected a JObject but it could be a string.
+            // Also, want to raise the appropriate exception, rather than a generic reader error,
+            // if the value's type does not match the schema.
+            switch(reader.TokenType) {
+            case JsonToken.Null:
+                return null;
+            case JsonToken.String:
+                return MessageContentContent.FromJson(String.Format("{0}{1}{0}", reader.QuoteChar, reader.Value));
+            case JsonToken.StartObject:
                 return MessageContentContent.FromJson(JObject.Load(reader).ToString(Formatting.None));
+            default:
+                var jsonString = reader.Value.ToString();
+                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into string or Dictionary<string, Object>", jsonString));
+                throw new InvalidDataException("The JSON string `" + jsonString + "` cannot be deserialized into any schema defined.");
             }
-            return null;
+        }
+
+        private bool MoveToContent(JsonReader reader) {
+            var tokenType = reader.TokenType;
+            while ((tokenType == JsonToken.None || tokenType == JsonToken.Comment)) {
+                if (!reader.Read()) return false;
+                tokenType = reader.TokenType;
+            }
+            return true;
         }
 
         /// <summary>
@@ -287,7 +311,7 @@ namespace Isbm2RestClient.Model
         /// <returns>True if the object can be converted</returns>
         public override bool CanConvert(Type objectType)
         {
-            return false;
+            return objectType == typeof(MessageContentContent);
         }
     }
 
