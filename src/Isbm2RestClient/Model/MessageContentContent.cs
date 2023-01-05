@@ -285,7 +285,9 @@ namespace Isbm2RestClient.Model
             case JsonToken.Null:
                 return null;
             case JsonToken.String:
-                return MessageContentContent.FromJson(String.Format("{0}{1}{0}", reader.QuoteChar, reader.Value));
+                return MessageContentContent.FromJson(String.Format("{0}{1}{0}", 
+                        reader.QuoteChar, 
+                        ((string)reader.Value).Replace($"{reader.QuoteChar}", $"\\{reader.QuoteChar}")));
             case JsonToken.StartObject:
                 return MessageContentContent.FromJson(JObject.Load(reader).ToString(Formatting.None));
             default:
