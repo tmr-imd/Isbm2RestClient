@@ -6,26 +6,176 @@ using Isbm2RestClient.Model;
 
 Trace.Listeners.Add(new ConsoleTraceListener());
 
+// Variables and defaults
+var operation = "run all";
+Dictionary<string, string> options = new Dictionary<string, string>();
+var channelUri = "/example/test_channel/publish";
+var topics = new List<string>(new string[]{"Test Topic"});
+
 Configuration config = new Configuration();
 config.BasePath = "https://isbm.lab.oiiecosystem.net/rest";
 // Configure HTTP basic authorization: username_password
 config.Username = "YOUR_USERNAME";
 config.Password = "YOUR_PASSWORD";
 
-var apiInstance = new ChannelManagementApi(config);
-var subscriberApi = new ConsumerPublicationServiceApi(config);
-var publisherApi = new ProviderPublicationServiceApi(config);
-var channelUri = "/example/test_channel/publish";
-var topics = new List<string>(new string[]{"Test Topic"});
-var requestBody = new List<Dictionary<String, Object>>();
+// Reusable methods
+var printUsage = () => {
+    Console.WriteLine("Usage: IsbmClientExample.exe [URL OPERATION [OPTIONS...]]");
+};
 
-Console.WriteLine("Base Path: {0}", apiInstance.GetBasePath());
-Console.WriteLine("Channel URI: {0}", channelUri);
+var validateBasePath = (string path) => {
+    try {
+        Uri uri = new Uri(path);
+        if (!uri.Scheme.StartsWith("http")) return false;
+        return true;
+    }
+    catch (UriFormatException) {
+        return false;
+    }
+};
 
-SimpleIsbm2.SimpleClient client = new SimpleIsbm2.SimpleClient(config);
+var validateOperation = (string operation) => {
+    switch (operation) {
+    case "create-channel":
+    case "delete-channel":
+    case "subscribe":
+    case "open-publication-session":
+    case "post":
+    case "read":
+        return true;
+    }
+    return false;
+};
 
-try
-{
+var optionsForOperations = new Dictionary<string, Func<string[], int, Dictionary<string, string>>>();
+optionsForOperations["create-channel"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("ChannelUri")) {
+            options["ChannelUri"] = new Uri(arguments[i], UriKind.Relative).ToString();
+        }
+        else {
+            options["Description"] = arguments[i];
+            break;
+        }
+    }
+    return options;
+};
+optionsForOperations["delete-channel"] = optionsForOperations["create-channel"];
+optionsForOperations["subscribe"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("ChannelUri")) {
+            options["ChannelUri"] = new Uri(arguments[i], UriKind.Relative).ToString();
+        }
+        else {
+            options["Topics"] = options.ContainsKey("Topics") ? $"{options["Topics"]},{arguments[i]}" : arguments[i];
+        }
+    }
+    return options;
+};
+optionsForOperations["open-publication-session"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("ChannelUri")) {
+            options["ChannelUri"] = new Uri(arguments[i], UriKind.Relative).ToString();
+            break;
+        }
+    }
+    return options;
+};
+optionsForOperations["post"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("SessionId")) {
+            options["SessionId"] = arguments[i];
+        }
+        else if (!options.ContainsKey("ContentString") && !options.ContainsKey("ContentDict")) {
+            var contentString = arguments[i];
+            try {
+                var content = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(contentString);
+                options["ContentDict"] = Newtonsoft.Json.JsonConvert.SerializeObject(content);
+            }
+            catch (Exception) {
+                options["ContentString"] = contentString;
+            }
+        }
+        else {
+            options["Topics"] = options.ContainsKey("Topics") ? $"{options["Topics"]},{arguments[i]}" : arguments[i];
+        }
+    }
+    if (options.Count > 0) options["Expiry"] = "PT1H"; // Default expiry
+    return options;
+};
+optionsForOperations["read"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("SessionId")) {
+            options["SessionId"] = arguments[i];
+        }
+        else if (arguments[i] == "all") {
+            options["ReadAll"] = arguments[i];
+        }
+    }
+    return options;
+};
+
+var methodsForOperations = new Dictionary<string, Action<Dictionary<string, string>, SimpleIsbm2.SimpleClient>>();
+methodsForOperations["create-channel"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Creating channel {0}...", channelUri);
+    var channel = client.CreateChannel(channelUri, ChannelType.Publication, options.ContainsKey("Description") ? options["Description"] : "No description");
+    client.GetChannel(channelUri);
+    Console.WriteLine("Done");
+};
+methodsForOperations["delete-channel"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.Write("Deleting channel {0}...", channelUri);
+    client.DeleteChannel(channelUri);
+    Console.WriteLine("Done");
+};
+methodsForOperations["subscribe"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Subscribing to {0} on {1}", options["Topics"], channelUri);
+    var subscription = client.OpenSubscriptionSession(channelUri, options["Topics"].Split(","));
+    Console.WriteLine("Subscription session opened:\n    {0}", subscription.ToJson().ReplaceLineEndings("\n    "));
+};
+methodsForOperations["cancel-subscription"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.Write("Closing subscription {0}...", options["SessionId"]);
+    Console.WriteLine("Not Yet Implemented");
+    // client.CloseSubscriptionSession(options["SessionId"]);
+    Console.WriteLine("Done");
+};
+methodsForOperations["open-publication-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Preparing to publish on {0}", channelUri);
+    var session = client.OpenPublicationSession(channelUri);
+    Console.WriteLine("Publication session opened:\n    {0}", session.ToJson().ReplaceLineEndings("\n    "));
+};
+methodsForOperations["close-publication-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.Write("Closing publication session {0}...", options["SessionId"]);
+    Console.WriteLine("Not Yet Implemented");
+    // client.ClosePublicationSession(options["SessionId"]);
+    Console.WriteLine("Done");
+};
+methodsForOperations["post"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Posting publication on {0}", options["SessionId"]);
+    object? content = options.ContainsKey("ContentString")
+                    ? options["ContentString"]
+                    : Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(options["ContentDict"]);
+    var message = client.PostPublication(options["SessionId"], content ?? "Invalid Content", options["Topics"].Split(","), options["Expiry"]);
+    Console.WriteLine("Posted: {0}", message.MessageId);
+};
+methodsForOperations["read"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    if (options.ContainsKey("ReadAll")) {
+        var publications = client.ReadAllPublications(options["SessionId"]);
+        foreach (var publication in publications) {
+            Console.WriteLine("Read:\n{0}", publication.ToJson());
+        }
+    }
+    else {
+        var publication = client.ReadPublication(options["SessionId"]);
+        Console.WriteLine("Read:\n{0}", publication?.ToJson() ?? "No messages");
+        client.RemovePublication(options["SessionId"]);
+    }
+};
+methodsForOperations["run all"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
     // Retrieve the channel, creating it if necessary.
     Channel channel;
     try {
@@ -74,10 +224,75 @@ try
     // Delete the channel if desired
     Console.WriteLine("Cleaning up.");
     client.DeleteChannel(channelUri);
+};
+
+// Process the commandline arguments
+if (args.Length > 0 && args.Length < 3) {
+    Console.WriteLine("Expected zero or at least 3 arguments but found {0}", args.Length);
+    printUsage();
+    return 1;
+}
+else if (args.Length > 0) {
+    // ISBM URL/BasePath
+    if (validateBasePath(args[0])) {
+        Uri basePathUri = new Uri(args[0]);
+        config.BasePath = basePathUri.AbsoluteUri;
+    }
+    else {
+        Console.WriteLine("Invalid URL `{0}`. ISBMv2 SimpleClient must be provided with a valid HTTP/S URL", args[0]);
+        printUsage();
+        return 1;
+    }
+
+    // operation
+    if (validateOperation(args[1])) {
+        operation = args[1];
+        Console.WriteLine("Performing operation {0}", operation);
+    }
+    else {
+        Console.WriteLine("Invalid Operation `{0}`. ISBMv2 SimpleClient supported operations are X, Y, Z", args[1]);
+        printUsage();
+        return 1;
+    }
+
+    // options for the operation
+    if (!optionsForOperations.ContainsKey(operation)) {
+        Console.WriteLine("Invalid options for operation.");
+        printUsage();
+        return 1;
+    }
+    options = optionsForOperations[operation](args, 2);
+    Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(options));
+
+    if (options.Count == 0) {
+        Console.WriteLine("Invalid options for operation.");
+        printUsage();
+        return 1;
+    }
+}
+
+if (options.ContainsKey("ChannelUri")) channelUri = options["ChannelUri"];
+
+Console.WriteLine("Base Path: {0}", config.BasePath);
+Console.WriteLine("Channel URI: {0}", channelUri);
+
+SimpleIsbm2.SimpleClient client = new SimpleIsbm2.SimpleClient(config);
+
+try
+{
+    // Run a specific operation based on the commandline arguments
+    if (!methodsForOperations.ContainsKey(operation)) {
+        Console.WriteLine("Unexpected operation {0}. Should have already been validated.", operation);
+        return 1;
+    }
+    methodsForOperations[operation](options, client);
+
+    return 0;
 }
 catch (ApiException e)
 {
     Console.WriteLine("Exception when calling SimpleClient: " + e.Message );
     Console.WriteLine("Status Code: "+ e.ErrorCode);
     Console.WriteLine(e.StackTrace);
+    return 1;
 }

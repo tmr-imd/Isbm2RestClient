@@ -86,6 +86,9 @@ class SimpleClient {
         Console.WriteLine("Reading publication from {0}", sessionId);
         try {
             var message = _subscriberApi.ReadPublication(sessionId);
+            if (message == null) {
+                throw new InvalidDataException("Unexpected failure deserialising read message. Message is null.");
+            }
             message.MessageType = MessageType.Publication;
             return message;
         }
