@@ -227,12 +227,13 @@ methodsForOperations["run all"] = (Dictionary<string, string> options, SimpleIsb
 };
 
 // Process the commandline arguments
-if (args.Length > 0 && args.Length < 3) {
-    Console.WriteLine("Expected zero or at least 3 arguments but found {0}", args.Length);
+if (args.Length > 1 && args.Length < 3) {
+    Console.WriteLine("Expected zero, 1, or at least 3 arguments but found {0}", args.Length);
     printUsage();
     return 1;
 }
-else if (args.Length > 0) {
+
+if (args.Length > 0) {
     // ISBM URL/BasePath
     if (validateBasePath(args[0])) {
         Uri basePathUri = new Uri(args[0]);
@@ -243,7 +244,9 @@ else if (args.Length > 0) {
         printUsage();
         return 1;
     }
+}
 
+if (args.Length > 1) {
     // operation
     if (validateOperation(args[1])) {
         operation = args[1];

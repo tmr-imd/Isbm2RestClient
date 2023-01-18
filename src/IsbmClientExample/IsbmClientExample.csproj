@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Isbm2RestClient\Isbm2RestClient.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <PropertyGroup>
