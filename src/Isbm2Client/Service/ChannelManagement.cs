@@ -1,30 +1,40 @@
 using Isbm2Client.Model;
 
-namespace Isbm2Client {
-namespace Service {
+using RestApi = Isbm2RestClient.Api;
+using RestModel = Isbm2RestClient.Model;
+using RestClient = Isbm2RestClient.Client;
 
-public class ChannelManagement {
-    public Dictionary<string, object> ClientConfig { get; private set; }
+namespace Isbm2Client.Service; 
 
-    private Isbm2RestClient.Api.ChannelManagementApi _channelApi;
+public class ChannelManagement : IChannelManagement
+{
+    //public Dictionary<string, object> ClientConfig { get; private set; }
+
+    private readonly RestApi.ChannelManagementApi _channelApi;
 
     public static ChannelManagement GetService(Dictionary<string, object> config) {
         return new ChannelManagement(config);
     }
 
     protected ChannelManagement(Dictionary<string, object> config) {
-        ClientConfig = config;
-        var apiConfig = new Isbm2RestClient.Client.Configuration();
-        apiConfig.BasePath = config.GetValueOrDefault("endpoint")?.ToString() ?? "http://localhost/rest";
+        //ClientConfig = config;
+
+        RestClient.Configuration apiConfig = new()
+        {
+            BasePath = config.GetValueOrDefault("endpoint")?.ToString() ?? "http://localhost/rest"
+        };
+
         // TODO: proper configuration
-        _channelApi = new Isbm2RestClient.Api.ChannelManagementApi();
+
+        _channelApi = new RestApi.ChannelManagementApi( apiConfig );
     } 
 
-    public Channel CreateChannel<T>(string channelUri, string description) where T : Channel, new() {
+    public Channel? CreateChannel<T>(string channelUri, string description) where T : Channel, new() {
         // TODO: error handling
-        var channelType = typeof(T) == typeof(Channel) ? Isbm2RestClient.Model.ChannelType.Publication : Isbm2RestClient.Model.ChannelType.Request;
-        var toBeChannel = new Isbm2RestClient.Model.Channel(channelUri, channelType, description);
+        var channelType = typeof(T) == typeof(Channel) ? RestModel.ChannelType.Publication : RestModel.ChannelType.Request;
+        var toBeChannel = new RestModel.Channel(channelUri, channelType, description);
         Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    "));
+
         var createdChannel = _channelApi.CreateChannel(toBeChannel);
         return Activator.CreateInstance(typeof(T), createdChannel.Uri, createdChannel.Description) as T;
     }
@@ -38,10 +48,7 @@ public class ChannelManagement {
     public Channel? GetChannel(string channelUri) {
         // TODO: error handling
         var channel = _channelApi.GetChannel(channelUri);
-        var type = channel.ChannelType == Isbm2RestClient.Model.ChannelType.Publication ? typeof(PublicationChannel) : typeof(RequestChannel);
+        var type = channel.ChannelType == RestModel.ChannelType.Publication ? typeof(PublicationChannel) : typeof(RequestChannel);
         return Activator.CreateInstance(type, channel.Uri, channel.Description) as Channel;
     }
 }
-
-} // Service
-} // Isbm2Client

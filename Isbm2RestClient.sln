@@ -1,14 +1,15 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-VisualStudioVersion = 12.0.0.0
-MinimumVisualStudioVersion = 10.0.0.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Isbm2RestClient", "src\Isbm2RestClient\Isbm2RestClient.csproj", "{BAE8DD2D-390B-48CC-BDBC-4F1A88E1BF07}"
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2RestClient", "src\Isbm2RestClient\Isbm2RestClient.csproj", "{BAE8DD2D-390B-48CC-BDBC-4F1A88E1BF07}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Isbm2RestClient.Test", "src\Isbm2RestClient.Test\Isbm2RestClient.Test.csproj", "{19F1DEBC-DE5E-4517-8062-F000CD499087}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2RestClient.Test", "src\Isbm2RestClient.Test\Isbm2RestClient.Test.csproj", "{19F1DEBC-DE5E-4517-8062-F000CD499087}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A6A8CC78-312F-48C1-8C43-3BE25936CA07}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IsbmClientExample", "src\IsbmClientExample\IsbmClientExample.csproj", "{78F9355B-CE55-48A8-AE25-F090734B0F67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Isbm2Client", "src\Isbm2Client\Isbm2Client.csproj", "{3C93177F-00A4-404D-84CC-09A26CDBCADF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2Client", "src\Isbm2Client\Isbm2Client.csproj", "{68DFEE51-DF37-482B-AA6B-E50A0C65532E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,15 +25,19 @@ Global
 		{19F1DEBC-DE5E-4517-8062-F000CD499087}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19F1DEBC-DE5E-4517-8062-F000CD499087}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19F1DEBC-DE5E-4517-8062-F000CD499087}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3C93177F-00A4-404D-84CC-09A26CDBCADF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C93177F-00A4-404D-84CC-09A26CDBCADF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C93177F-00A4-404D-84CC-09A26CDBCADF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C93177F-00A4-404D-84CC-09A26CDBCADF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{3C93177F-00A4-404D-84CC-09A26CDBCADF} = {A6A8CC78-312F-48C1-8C43-3BE25936CA07}
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E09186B9-BE40-485C-B8C6-F545F18295E2}
 	EndGlobalSection
 EndGlobal
