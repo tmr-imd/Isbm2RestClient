@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IsbmClientExample", "src\Is
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2Client", "src\Isbm2Client\Isbm2Client.csproj", "{68DFEE51-DF37-482B-AA6B-E50A0C65532E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Isbm2Client.Test", "src\Isbm2Client.Test\Isbm2Client.Test.csproj", "{1C5970E2-BBFD-485B-93D4-49FA2E748862}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C5970E2-BBFD-485B-93D4-49FA2E748862}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C5970E2-BBFD-485B-93D4-49FA2E748862}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C5970E2-BBFD-485B-93D4-49FA2E748862}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C5970E2-BBFD-485B-93D4-49FA2E748862}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

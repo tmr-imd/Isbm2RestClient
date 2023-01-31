@@ -29,9 +29,9 @@ public class ChannelManagement : IChannelManagement
         _channelApi = new RestApi.ChannelManagementApi( apiConfig );
     } 
 
-    public Channel? CreateChannel<T>(string channelUri, string description) where T : Channel, new() {
+    public Channel? CreateChannel<T>(string channelUri, string description) where T : Channel {
         // TODO: error handling
-        var channelType = typeof(T) == typeof(Channel) ? RestModel.ChannelType.Publication : RestModel.ChannelType.Request;
+        var channelType = typeof(T) == typeof(PublicationChannel) ? RestModel.ChannelType.Publication : RestModel.ChannelType.Request;
         var toBeChannel = new RestModel.Channel(channelUri, channelType, description);
         Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    "));
 
