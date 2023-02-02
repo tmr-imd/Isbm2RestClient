@@ -1,22 +1,23 @@
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using static System.Net.WebRequestMethods;
 
 namespace Isbm2Client.Test;
 
-public class ChannelManagementTest
+public class ChannelManagementTest : IClassFixture<ConfigFixture>
 {
     private const string channelUri = "/example/test_channel/publish";
 
-    private readonly Dictionary<string, object> config = new()
+    private readonly ConfigFixture fixture;
+
+    public ChannelManagementTest( ConfigFixture fixture )
     {
-        ["endpoint"] = "https://isbm.lab.oiiecosystem.net/rest"
-    };
+        this.fixture = fixture;
+    }
 
     [Fact]
     public void CreateAndDeleteChannel()
     {
-        var manager = ChannelManagement.GetService(config);
+        var manager = new RestChannelManagement( fixture.Config );
 
         Assert.NotNull( manager );
 

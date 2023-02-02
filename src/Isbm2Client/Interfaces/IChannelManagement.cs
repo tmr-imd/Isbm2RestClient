@@ -1,8 +1,8 @@
 using Isbm2Client.Model;
 
-namespace Isbm2Client.Service; 
+namespace Isbm2Client.Interface; 
 
-interface IChannelManagement {
+public interface IChannelManagement {
     //static IChannelManagement GetService(Dictionary<string, object> config);
 
     Channel? CreateChannel<T>(string channelUri, string description) where T : Channel;

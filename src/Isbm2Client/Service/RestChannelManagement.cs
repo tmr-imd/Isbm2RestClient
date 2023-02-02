@@ -1,27 +1,21 @@
 using Isbm2Client.Model;
+using Isbm2Client.Interface;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
+using Microsoft.Extensions.Options;
 
 namespace Isbm2Client.Service; 
 
-public class ChannelManagement : IChannelManagement
+public class RestChannelManagement : IChannelManagement
 {
-    //public Dictionary<string, object> ClientConfig { get; private set; }
-
     private readonly RestApi.ChannelManagementApi _channelApi;
 
-    public static ChannelManagement GetService(Dictionary<string, object> config) {
-        return new ChannelManagement(config);
-    }
-
-    protected ChannelManagement(Dictionary<string, object> config) {
-        //ClientConfig = config;
-
+    public RestChannelManagement(IOptions<ClientConfig> options) {
         RestClient.Configuration apiConfig = new()
         {
-            BasePath = config.GetValueOrDefault("endpoint")?.ToString() ?? "http://localhost/rest"
+            BasePath = options.Value.EndPoint
         };
 
         // TODO: proper configuration
