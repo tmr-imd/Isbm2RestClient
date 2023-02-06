@@ -24,19 +24,20 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestProviderSession> OpenProviderRequestSession(Channel channel, IEnumerable<string> topics ) 
+        public async Task<RequestProviderSession> OpenProviderRequestSession(Channel channel, IEnumerable<string> topics) 
         {
-            var inputSession = new RestModel.Session()
+            var sessionParams = new RestModel.Session()
             {
                 SessionType = RestModel.SessionType.RequestProvider,
-                Topics = topics.ToList()
+                Topics = topics.ToList(),
+                FilterExpressions = new List<RestModel.FilterExpression>()
             };
 
-            var session = await _requestApi.OpenProviderRequestSessionAsync( channel.Uri, inputSession );
+            var session = await _requestApi.OpenProviderRequestSessionAsync( channel.Uri, sessionParams );
 
             if ( session is null ) throw new Exception( "Uh oh" );
 
-            return new RequestProviderSession( session.SessionId, session.ListenerUrl, topics.ToArray(), Array.Empty<string>() );
+            return new RequestProviderSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
         }
     }
 }
