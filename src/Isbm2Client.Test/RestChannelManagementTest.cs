@@ -13,16 +13,16 @@ public class RestChannelManagementTest : IClassFixture<ServiceFixture>
     }
 
     [Fact]
-    public void CreateAndDeleteChannel()
+    public async Task CreateAndDeleteChannel()
     {
         var manager = new RestChannelManagement( fixture.Config );
 
         Assert.NotNull( manager );
 
-        var channel = manager.CreateChannel<RequestChannel>(ServiceFixture.CHANNEL_URI, ServiceFixture.CHANNEL_DESCRIPTION);
+        var channel = await manager.CreateChannel<RequestChannel>(ServiceFixture.CHANNEL_URI, ServiceFixture.CHANNEL_DESCRIPTION);
 
-        Assert.NotNull( channel );
+        Assert.NotNull(channel);
 
-        manager.DeleteChannel(ServiceFixture.CHANNEL_URI);
+        await manager.DeleteChannel(ServiceFixture.CHANNEL_URI);
     }
 }
