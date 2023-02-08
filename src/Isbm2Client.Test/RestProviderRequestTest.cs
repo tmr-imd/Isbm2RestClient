@@ -4,7 +4,8 @@ using Xunit;
 
 namespace Isbm2Client.Test;
 
-public class RestProviderRequestTest : IClassFixture<RequestChannelFixture>
+[Collection("Request Channel collection")]
+public class RestProviderRequestTest
 {
     private readonly RequestChannelFixture fixture;
 

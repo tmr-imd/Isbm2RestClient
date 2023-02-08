@@ -3,7 +3,8 @@ using Isbm2Client.Service;
 
 namespace Isbm2Client.Test;
 
-public class RestConsumerRequestTest : IClassFixture<RequestChannelFixture>
+[Collection("Request Channel collection")]
+public class RestConsumerRequestTest
 {
     private readonly RequestChannelFixture fixture;
 
