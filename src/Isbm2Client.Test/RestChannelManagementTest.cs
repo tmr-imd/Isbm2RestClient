@@ -3,11 +3,14 @@ using Isbm2Client.Service;
 
 namespace Isbm2Client.Test;
 
-public class RestChannelManagementTest : IClassFixture<ServiceFixture>
+public class RestChannelManagementTest : IClassFixture<ConfigFixture>
 {
-    private readonly ServiceFixture fixture;
+    public const string CHANNEL_URI = "/pittsh/test/general";
+    public const string CHANNEL_DESCRIPTION = "fred";
 
-    public RestChannelManagementTest( ServiceFixture fixture )
+    private readonly ConfigFixture fixture;
+
+    public RestChannelManagementTest( ConfigFixture fixture )
     {
         this.fixture = fixture;
     }
@@ -19,10 +22,10 @@ public class RestChannelManagementTest : IClassFixture<ServiceFixture>
 
         Assert.NotNull( manager );
 
-        var channel = await manager.CreateChannel<RequestChannel>(ServiceFixture.CHANNEL_URI, ServiceFixture.CHANNEL_DESCRIPTION);
+        var channel = await manager.CreateChannel<RequestChannel>(CHANNEL_URI, CHANNEL_DESCRIPTION);
 
         Assert.NotNull(channel);
 
-        await manager.DeleteChannel(ServiceFixture.CHANNEL_URI);
+        await manager.DeleteChannel(CHANNEL_URI);
     }
 }
