@@ -59,7 +59,7 @@ namespace Isbm2Client.Service
             await _requestApi.CloseSessionAsync(session.Id);
         }
 
-        public async Task<object> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics )
+        public async Task<RequestMessage> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics )
         {
             MessageContent messageContent = content switch
             {
@@ -67,17 +67,11 @@ namespace Isbm2Client.Service
                 _ => throw new Exception( "Uh oh" )
             };
 
-            var message = new Message( messageContent: messageContent, topics: topics.ToList() );
+            var message = new RestModel.Message( messageContent: messageContent, topics: topics.ToList() );
 
             var response = await _requestApi.PostRequestAsync( session.Id, message );
 
-            return new
-            {
-                response.MessageId,
-                message.MessageType,
-                message.MessageContent,
-                Topics = topics
-            };
+            return new RequestMessage( response.MessageId, message.MessageContent, topics.ToArray(), "" );
         }
     }
 }

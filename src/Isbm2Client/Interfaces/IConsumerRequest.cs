@@ -7,5 +7,5 @@ public interface IConsumerRequest {
     Task<RequestConsumerSession> OpenSession( RequestChannel channel, string listenerUri );
     Task CloseSession(RequestConsumerSession session);
 
-    Task<object> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics );
+    Task<RequestMessage> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics );
 }

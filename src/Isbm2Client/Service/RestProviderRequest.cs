@@ -5,7 +5,6 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
-using Isbm2RestClient.Model;
 
 namespace Isbm2Client.Service
 {
@@ -46,17 +45,11 @@ namespace Isbm2Client.Service
             await _requestApi.CloseSessionAsync( session.Id );
         }
 
-        public async Task<object> ReadRequest(RequestProviderSession session)
+        public async Task<RequestMessage> ReadRequest(RequestProviderSession session)
         {
             var response = await _requestApi.ReadRequestAsync( session.Id );
 
-            return new
-            {
-                response.MessageId,
-                response.MessageType,
-                response.MessageContent,
-                response.Topics
-            };
+            return new RequestMessage( response.MessageId, response.MessageContent, response.Topics.ToArray(), "" );
         }
     }
 }
