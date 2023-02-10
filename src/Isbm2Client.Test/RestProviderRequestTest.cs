@@ -20,11 +20,11 @@ public class RestProviderRequestTest
     public async Task OpenAndCloseSession()
     {
         var request = new RestProviderRequest( fixture.Config );
-        var session = await request.OpenProviderRequestSession( fixture.RequestChannel, topics );
+        var session = await request.OpenSession( fixture.RequestChannel, topics );
 
         Assert.NotNull( session );
 
-        await request.CloseProviderRequestSession( session );
+        await request.CloseSession( session );
     }
 
     [Fact]
@@ -34,24 +34,21 @@ public class RestProviderRequestTest
         var consumer = fixture.Consumer;
         var provider = fixture.Provider;
 
-        var session = await provider.OpenProviderRequestSession( channel, topics );
-
-        var consumerSession = await consumer.OpenConsumerRequestSession( channel );
+        var providerSession = await provider.OpenSession( channel, topics );
+        var consumerSession = await consumer.OpenSession( channel );
 
         await consumer.PostRequest(consumerSession, "Yo!", topics);
 
-        Assert.NotNull(session);
-
         try
         {
-            var message = await provider.ReadRequest( session );
+            var message = await provider.ReadRequest( providerSession );
 
             Assert.NotNull(message);
         }
         finally
         {
-            await consumer.CloseConsumerRequestSession( consumerSession );
-            await provider.CloseProviderRequestSession( session );
+            await consumer.CloseSession( consumerSession );
+            await provider.CloseSession( providerSession );
         }
     }
 }

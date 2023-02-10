@@ -25,7 +25,7 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestProviderSession> OpenProviderRequestSession(RequestChannel channel, IEnumerable<string> topics) 
+        public async Task<RequestProviderSession> OpenSession(RequestChannel channel, IEnumerable<string> topics) 
         {
             var sessionParams = new RestModel.Session()
             {
@@ -41,7 +41,7 @@ namespace Isbm2Client.Service
             return new RequestProviderSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
         }
 
-        public async Task CloseProviderRequestSession( RequestProviderSession session )
+        public async Task CloseSession( RequestProviderSession session )
         {
             await _requestApi.CloseSessionAsync( session.Id );
         }

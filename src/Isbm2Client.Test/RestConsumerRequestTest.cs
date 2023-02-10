@@ -17,18 +17,18 @@ public class RestConsumerRequestTest
     public async Task OpenAndCloseSession()
     {
         var request = new RestConsumerRequest( fixture.Config );
-        var session = await request.OpenConsumerRequestSession( fixture.RequestChannel );
+        var session = await request.OpenSession( fixture.RequestChannel );
 
         Assert.NotNull( session );
 
-        await request.CloseConsumerRequestSession( session );
+        await request.CloseSession( session );
     }
 
     [Fact]
     public async Task PostRequest()
     {
         var request = new RestConsumerRequest(fixture.Config);
-        var session = await request.OpenConsumerRequestSession(fixture.RequestChannel);
+        var session = await request.OpenSession(fixture.RequestChannel);
 
         Assert.NotNull(session);
 
@@ -36,6 +36,6 @@ public class RestConsumerRequestTest
 
         Assert.NotNull( message );
 
-        await request.CloseConsumerRequestSession( session );
+        await request.CloseSession( session );
     }
 }

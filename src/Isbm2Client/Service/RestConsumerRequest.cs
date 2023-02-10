@@ -25,7 +25,7 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ConsumerRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestConsumerSession> OpenConsumerRequestSession(RequestChannel channel) 
+        public async Task<RequestConsumerSession> OpenSession(RequestChannel channel) 
         {
             var sessionParams = new RestModel.Session()
             {
@@ -39,7 +39,7 @@ namespace Isbm2Client.Service
             return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>() );
         }
 
-        public async Task<RequestConsumerSession> OpenConsumerRequestSession(RequestChannel channel, string listenerUri)
+        public async Task<RequestConsumerSession> OpenSession(RequestChannel channel, string listenerUri)
         {
             var sessionParams = new RestModel.Session()
             {
@@ -54,7 +54,7 @@ namespace Isbm2Client.Service
             return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>());
         }
 
-        public async Task CloseConsumerRequestSession(RequestConsumerSession session)
+        public async Task CloseSession(RequestConsumerSession session)
         {
             await _requestApi.CloseSessionAsync(session.Id);
         }
