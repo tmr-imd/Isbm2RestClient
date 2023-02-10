@@ -5,6 +5,7 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using Isbm2RestClient.Model;
 
 namespace Isbm2Client.Service
 {
@@ -24,7 +25,7 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestProviderSession> OpenProviderRequestSession(Channel channel, IEnumerable<string> topics) 
+        public async Task<RequestProviderSession> OpenProviderRequestSession(RequestChannel channel, IEnumerable<string> topics) 
         {
             var sessionParams = new RestModel.Session()
             {
@@ -38,6 +39,24 @@ namespace Isbm2Client.Service
             if ( session is null ) throw new Exception( "Uh oh" );
 
             return new RequestProviderSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
+        }
+
+        public async Task CloseProviderRequestSession( RequestProviderSession session )
+        {
+            await _requestApi.CloseSessionAsync( session.Id );
+        }
+
+        public async Task<object> ReadRequest(RequestProviderSession session)
+        {
+            var response = await _requestApi.ReadRequestAsync( session.Id );
+
+            return new
+            {
+                response.MessageId,
+                response.MessageType,
+                response.MessageContent,
+                response.Topics
+            };
         }
     }
 }

@@ -5,6 +5,7 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using Isbm2RestClient.Model;
 
 namespace Isbm2Client.Service
 {
@@ -24,7 +25,7 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ConsumerRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestConsumerSession> OpenConsumerRequestSession(Channel channel) 
+        public async Task<RequestConsumerSession> OpenConsumerRequestSession(RequestChannel channel) 
         {
             var sessionParams = new RestModel.Session()
             {
@@ -38,7 +39,7 @@ namespace Isbm2Client.Service
             return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>() );
         }
 
-        public async Task<RequestConsumerSession> OpenConsumerRequestSession(Channel channel, string listenerUri)
+        public async Task<RequestConsumerSession> OpenConsumerRequestSession(RequestChannel channel, string listenerUri)
         {
             var sessionParams = new RestModel.Session()
             {
@@ -51,6 +52,32 @@ namespace Isbm2Client.Service
             if (session is null) throw new Exception("Uh oh");
 
             return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>());
+        }
+
+        public async Task CloseConsumerRequestSession(RequestConsumerSession session)
+        {
+            await _requestApi.CloseSessionAsync(session.Id);
+        }
+
+        public async Task<object> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics )
+        {
+            MessageContent messageContent = content switch
+            {
+                string x => new MessageContent("text/plain", content: new MessageContentContent(x)),
+                _ => throw new Exception( "Uh oh" )
+            };
+
+            var message = new Message( messageContent: messageContent, topics: topics.ToList() );
+
+            var response = await _requestApi.PostRequestAsync( session.Id, message );
+
+            return new
+            {
+                response.MessageId,
+                message.MessageType,
+                message.MessageContent,
+                Topics = topics
+            };
         }
     }
 }

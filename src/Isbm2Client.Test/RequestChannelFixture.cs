@@ -1,4 +1,5 @@
-﻿using Isbm2Client.Model;
+﻿using Isbm2Client.Interface;
+using Isbm2Client.Model;
 using Isbm2Client.Service;
 using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
@@ -16,6 +17,8 @@ public class RequestChannelFixture : IAsyncLifetime
     });
 
     public RequestChannel RequestChannel { get; set; } = null!;
+    public IProviderRequest Provider { get; set; } = null!;
+    public IConsumerRequest Consumer { get; set; } = null!;
 
     public async Task InitializeAsync()
     {
@@ -31,13 +34,17 @@ public class RequestChannelFixture : IAsyncLifetime
 
             RequestChannel = (RequestChannel)channel;
         }
+
+        Provider = new RestProviderRequest(Config);
+        Consumer = new RestConsumerRequest(Config);
     }
 
     public async Task DisposeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        await Task.Yield();
+        //var management = new RestChannelManagement(Config);
 
-        await management.DeleteChannel(CHANNEL_URI);
+        //await management.DeleteChannel(CHANNEL_URI);
     }
 }
 
