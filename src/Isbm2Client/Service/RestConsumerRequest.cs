@@ -63,20 +63,30 @@ namespace Isbm2Client.Service
         {
             var inputMessageContent = content switch
             {
-                string x => new RestModel.MessageContent("text/plain", content: new MessageContentContent(x)),
-                _ => throw new Exception( "Uh oh" )
+                string x => 
+                    new RestModel.MessageContent("text/plain", content: new MessageContentContent(x)),
+
+                Dictionary<string, object> x => 
+                    new RestModel.MessageContent("application/json", content: new MessageContentContent(x)),
+
+                _ => 
+                    throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
             };
 
             var inputMessage = new RestModel.Message( messageContent: inputMessageContent, topics: topics.ToList() );
 
             var message = await _requestApi.PostRequestAsync( session.Id, inputMessage );
 
-            //var messageContent = new StringMessageContent( message.MessageId, content, "text/plain", "");
-
-            var messageContent = content switch
+            Model.MessageContent messageContent = content switch
             {
-                string x => new Model.MessageContent<string>(message.MessageId, x, "text/plain", ""),
-                _ => throw new Exception("Uh oh")
+                string x => 
+                    new Model.MessageContent<string>(message.MessageId, x),
+
+                Dictionary<string, object> x => 
+                    new Model.MessageContent<Dictionary<string, object>>(message.MessageId, x),
+
+                _ => 
+                    throw new Exception("Uh oh")
             };
 
             return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );

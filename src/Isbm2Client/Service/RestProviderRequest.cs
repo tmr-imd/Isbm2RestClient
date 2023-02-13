@@ -51,9 +51,14 @@ namespace Isbm2Client.Service
 
             MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
-                string x => new MessageContent<string>( response.MessageId, x, "text/plain", ""),
-                Dictionary<string, object> x => new MessageContent<Dictionary<string, object>>( response.MessageId, x, "text/json", "" ),
-                _ => throw new Exception( "Uh oh" )
+                string x => 
+                    new MessageContent<string>( response.MessageId, x),
+
+                Dictionary<string, object> x => 
+                    new MessageContent<Dictionary<string, object>>( response.MessageId, x ),
+
+                _ => 
+                    throw new Exception( "Uh oh" )
             };
 
             return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
