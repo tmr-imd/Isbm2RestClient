@@ -43,7 +43,12 @@ public class RestProviderRequestTest
         {
             var message = await provider.ReadRequest( providerSession );
 
-            Assert.NotNull(message);
+            Assert.IsType<MessageContent<string>>( message.MessageContent );
+
+            var content = message.MessageContent.GetContent<string>();
+
+            Assert.NotNull(content);
+            Assert.Contains("Yo!", content);
         }
         finally
         {

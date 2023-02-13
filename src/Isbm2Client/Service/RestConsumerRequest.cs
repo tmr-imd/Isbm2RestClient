@@ -61,17 +61,25 @@ namespace Isbm2Client.Service
 
         public async Task<RequestMessage> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics )
         {
-            MessageContent messageContent = content switch
+            var inputMessageContent = content switch
             {
-                string x => new MessageContent("text/plain", content: new MessageContentContent(x)),
+                string x => new RestModel.MessageContent("text/plain", content: new MessageContentContent(x)),
                 _ => throw new Exception( "Uh oh" )
             };
 
-            var message = new RestModel.Message( messageContent: messageContent, topics: topics.ToList() );
+            var inputMessage = new RestModel.Message( messageContent: inputMessageContent, topics: topics.ToList() );
 
-            var response = await _requestApi.PostRequestAsync( session.Id, message );
+            var message = await _requestApi.PostRequestAsync( session.Id, inputMessage );
 
-            return new RequestMessage( response.MessageId, message.MessageContent, topics.ToArray(), "" );
+            //var messageContent = new StringMessageContent( message.MessageId, content, "text/plain", "");
+
+            var messageContent = content switch
+            {
+                string x => new Model.MessageContent<string>(message.MessageId, x, "text/plain", ""),
+                _ => throw new Exception("Uh oh")
+            };
+
+            return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
         }
     }
 }
