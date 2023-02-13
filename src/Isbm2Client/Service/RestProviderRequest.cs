@@ -40,11 +40,6 @@ namespace Isbm2Client.Service
             return new RequestProviderSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
         }
 
-        public async Task CloseSession( RequestProviderSession session )
-        {
-            await _requestApi.CloseSessionAsync( session.Id );
-        }
-
         public async Task<RequestMessage> ReadRequest(RequestProviderSession session)
         {
             var response = await _requestApi.ReadRequestAsync( session.Id );
@@ -62,6 +57,44 @@ namespace Isbm2Client.Service
             };
 
             return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
+        }
+
+        public async Task<ResponseMessage> PostResponse<T>( RequestProviderSession session, RequestMessage requestMessage, T content )
+        {
+            var inputMessageContent = content switch
+            {
+                string x =>
+                    new RestModel.MessageContent("text/plain", content: new RestModel.MessageContentContent(x)),
+
+                Dictionary<string, object> x =>
+                    new RestModel.MessageContent("application/json", content: new RestModel.MessageContentContent(x)),
+
+                _ =>
+                    throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
+            };
+
+            var inputMessage = new RestModel.Message( messageContent: inputMessageContent );
+
+            var message = await _requestApi.PostResponseAsync( session.Id, requestMessage.Id, inputMessage );
+
+            Model.MessageContent messageContent = content switch
+            {
+                string x => 
+                    new MessageContent<string>(message.MessageId, x),
+
+                Dictionary<string, object> x => 
+                    new MessageContent<Dictionary<string, object>>(message.MessageId, x),
+
+                _ => 
+                    throw new Exception("Uh oh")
+            };
+
+            return new ResponseMessage( message.MessageId, messageContent, requestMessage.Topics, "" );
+        }
+
+        public async Task CloseSession( RequestProviderSession session )
+        {
+            await _requestApi.CloseSessionAsync( session.Id );
         }
     }
 }

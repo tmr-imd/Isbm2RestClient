@@ -80,10 +80,10 @@ namespace Isbm2Client.Service
             Model.MessageContent messageContent = content switch
             {
                 string x => 
-                    new Model.MessageContent<string>(message.MessageId, x),
+                    new MessageContent<string>(message.MessageId, x),
 
                 Dictionary<string, object> x => 
-                    new Model.MessageContent<Dictionary<string, object>>(message.MessageId, x),
+                    new MessageContent<Dictionary<string, object>>(message.MessageId, x),
 
                 _ => 
                     throw new Exception("Uh oh")

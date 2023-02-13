@@ -92,4 +92,34 @@ public class RestProviderRequestTest
             await provider.CloseSession( providerSession );
         }
     }
+
+    [Fact]
+    public async Task ReadRequestPostResponse()
+    {
+        var providerSession = await provider.OpenSession(channel, topics);
+        var consumerSession = await consumer.OpenSession(channel);
+
+        await consumer.PostRequest(consumerSession, "Yo!", topics);
+
+        try
+        {
+            var requestMessage = await provider.ReadRequest(providerSession);
+
+            Assert.IsType<MessageContent<string>>(requestMessage.MessageContent);
+
+            var content = requestMessage.MessageContent.GetContent<string>();
+
+            Assert.True( content == "Yo!" );
+
+            var message = await provider.PostResponse( providerSession, requestMessage, "Carrots!" );
+
+            Assert.NotNull( message );
+            Assert.Contains( "Carrots", message.MessageContent.GetContent<string>() );
+        }
+        finally
+        {
+            await consumer.CloseSession(consumerSession);
+            await provider.CloseSession(providerSession);
+        }
+    }
 }
