@@ -1,5 +1,6 @@
 using Isbm2Client.Model;
 using Isbm2Client.Service;
+using Isbm2RestClient.Client;
 
 namespace Isbm2Client.Test;
 
@@ -22,6 +23,21 @@ public class RestConsumerRequestTest
         Assert.NotNull( session );
 
         await request.CloseSession( session );
+    }
+
+    [Fact]
+    public async Task CantCloseSessionTwice()
+    {
+        var request = new RestConsumerRequest(fixture.Config);
+        var session = await request.OpenSession(fixture.RequestChannel);
+
+        Assert.NotNull(session);
+
+        await request.CloseSession(session);
+
+        Task closeAgain() => request.CloseSession(session);
+
+        await Assert.ThrowsAsync<ApiException>(closeAgain);
     }
 
     [Fact]
