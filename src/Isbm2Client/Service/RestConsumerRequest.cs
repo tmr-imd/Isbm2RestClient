@@ -54,6 +54,13 @@ namespace Isbm2Client.Service
             return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>());
         }
 
+        public Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic )
+        {
+            var topics = new[] { topic };
+
+            return PostRequest( sessionId, content, topics );
+        }
+
         public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics )
         {
             var inputMessageContent = content switch

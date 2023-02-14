@@ -24,6 +24,13 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
         }
 
+        public Task<RequestProviderSession> OpenSession(string channelUrl, string topic)
+        {
+            var topics = new[] { topic };
+
+            return OpenSession( channelUrl, topics );
+        }
+
         public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics) 
         {
             var sessionParams = new RestModel.Session()
