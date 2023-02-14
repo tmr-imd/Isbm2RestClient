@@ -36,7 +36,7 @@ namespace Isbm2Client.Service
 
             if ( session is null ) throw new Exception( "Uh oh" );
 
-            return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>() );
+            return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl );
         }
 
         public async Task<RequestConsumerSession> OpenSession(string channelUri, string listenerUri)
@@ -51,7 +51,7 @@ namespace Isbm2Client.Service
 
             if (session is null) throw new Exception("Uh oh");
 
-            return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>());
+            return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl);
         }
 
         public Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic )
