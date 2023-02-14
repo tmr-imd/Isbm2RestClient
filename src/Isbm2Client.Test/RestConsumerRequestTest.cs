@@ -5,16 +5,17 @@ using Isbm2RestClient.Client;
 
 namespace Isbm2Client.Test;
 
-[Collection("Request Channel collection")]
+[Collection("Request Consumer collection")]
 public class RestConsumerRequestTest
 {
     private readonly RequestChannel channel;
     private readonly IConsumerRequest consumer;
     private readonly IProviderRequest provider;
 
-    private readonly string[] topics = { "topic!" };
+    private static readonly string BOO = "Boo!";
+    private static readonly string BOO_TOPIC = "Boo Topic!";
 
-    public RestConsumerRequestTest( RequestChannelFixture fixture )
+    public RestConsumerRequestTest( RequestConsumerFixture fixture )
     {
         channel = fixture.RequestChannel;
         provider = fixture.Provider;
@@ -46,7 +47,7 @@ public class RestConsumerRequestTest
     {
         RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
 
-        _ = await consumer.PostRequest( session.Id, "Yo!", topics );
+        _ = await consumer.PostRequest( session.Id, BOO, BOO_TOPIC );
 
         await consumer.CloseSession( session.Id );
     }
@@ -54,20 +55,20 @@ public class RestConsumerRequestTest
     [Fact]
     public async Task PostRequestReadResponse()
     {
-        var providerSession = await provider.OpenSession(channel.Uri, topics);
+        var providerSession = await provider.OpenSession(channel.Uri, BOO_TOPIC);
         var consumerSession = await consumer.OpenSession(channel.Uri);
-
-        await consumer.PostRequest(consumerSession.Id, "Yo!", topics);
 
         try
         {
+            await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC);
+
             var requestMessage = await provider.ReadRequest(providerSession.Id);
 
             Assert.IsType<MessageContent<string>>(requestMessage.MessageContent);
 
             var requestContent = requestMessage.MessageContent.GetContent<string>();
 
-            Assert.True(requestContent == "Yo!");
+            Assert.True(requestContent == BOO);
 
             var responseMessage = await provider.PostResponse(providerSession.Id, requestMessage.Id, "Carrots!");
 

@@ -6,10 +6,10 @@ using Microsoft.Extensions.Options;
 
 namespace Isbm2Client.Test;
 
-public class RequestChannelFixture : IAsyncLifetime
+public class RequestProviderFixture : IAsyncLifetime
 {
-    public const string CHANNEL_URI = "/pittsh/test/request";
-    public const string CHANNEL_DESCRIPTION = "fred";
+    public const string CHANNEL_URI = "/pittsh/test/request/provider";
+    public const string CHANNEL_DESCRIPTION = "For RestRequestProviderTest class";
 
     public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
     {
@@ -48,8 +48,8 @@ public class RequestChannelFixture : IAsyncLifetime
     }
 }
 
-[CollectionDefinition("Request Channel collection")]
-public class RequestChannelCollection : ICollectionFixture<RequestChannelFixture>
+[CollectionDefinition("Request Provider collection")]
+public class RequestProviderCollection : ICollectionFixture<RequestProviderFixture>
 {
     // This class has no code, and is never created. Its purpose is simply
     // to be the place to apply [CollectionDefinition] and all the

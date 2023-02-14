@@ -5,16 +5,17 @@ using Isbm2RestClient.Client;
 
 namespace Isbm2Client.Test;
 
-[Collection("Request Channel collection")]
+[Collection("Request Provider collection")]
 public class RestProviderRequestTest
 {
     private readonly RequestChannel channel;
     private readonly IConsumerRequest consumer;
     private readonly IProviderRequest provider;
 
-    private readonly string[] topics = { "topic!" };
+    private static readonly string YO = "Yo!";
+    private static readonly string YO_TOPIC = "Yo Topic!";
 
-    public RestProviderRequestTest( RequestChannelFixture fixture )
+    public RestProviderRequestTest( RequestProviderFixture fixture )
     {
         channel = fixture.RequestChannel;
         provider = fixture.Provider;
@@ -24,7 +25,7 @@ public class RestProviderRequestTest
     [Fact]
     public async Task OpenAndCloseSession()
     {
-        var session = await provider.OpenSession( channel.Uri, topics );
+        var session = await provider.OpenSession( channel.Uri, YO_TOPIC );
 
         await provider.CloseSession( session.Id );
     }
@@ -32,7 +33,7 @@ public class RestProviderRequestTest
     [Fact]
     public async Task CantCloseSessionTwice()
     {
-        var session = await provider.OpenSession(channel.Uri, topics);
+        var session = await provider.OpenSession(channel.Uri, YO_TOPIC );
 
         await provider.CloseSession(session.Id);
 
@@ -44,10 +45,10 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadStringRequest()
     {
-        var providerSession = await provider.OpenSession( channel.Uri, topics );
+        var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC );
         var consumerSession = await consumer.OpenSession( channel.Uri );
 
-        await consumer.PostRequest(consumerSession.Id, "Yo!", topics);
+        await consumer.PostRequest(consumerSession.Id, YO, YO_TOPIC);
 
         try
         {
@@ -58,7 +59,7 @@ public class RestProviderRequestTest
             var content = message.MessageContent.GetContent<string>();
 
             Assert.NotNull(content);
-            Assert.Contains("Yo!", content);
+            Assert.Contains(YO, content);
         }
         finally
         {
@@ -70,7 +71,7 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadDictionaryRequest()
     {
-        var providerSession = await provider.OpenSession( channel.Uri, topics );
+        var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC);
         var consumerSession = await consumer.OpenSession( channel.Uri );
 
         var inputContent = new Dictionary<string, object>()
@@ -79,7 +80,7 @@ public class RestProviderRequestTest
             { "wilma", "betty" }
         };
 
-        await consumer.PostRequest(consumerSession.Id, inputContent, topics);
+        await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
 
         try
         {
@@ -102,10 +103,10 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadRequestPostResponse()
     {
-        var providerSession = await provider.OpenSession(channel.Uri, topics);
+        var providerSession = await provider.OpenSession(channel.Uri, YO_TOPIC);
         var consumerSession = await consumer.OpenSession(channel.Uri);
 
-        await consumer.PostRequest(consumerSession.Id, "Yo!", topics);
+        await consumer.PostRequest(consumerSession.Id, YO, YO_TOPIC);
 
         try
         {
@@ -115,7 +116,7 @@ public class RestProviderRequestTest
 
             var content = requestMessage.MessageContent.GetContent<string>();
 
-            Assert.True( content == "Yo!" );
+            Assert.True( content == YO );
 
             var message = await provider.PostResponse( providerSession.Id, requestMessage.Id, "Carrots!" );
 
