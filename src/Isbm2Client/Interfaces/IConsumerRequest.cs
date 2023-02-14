@@ -3,11 +3,11 @@ using Isbm2Client.Model;
 namespace Isbm2Client.Interface; 
 
 public interface IConsumerRequest {
-    Task<RequestConsumerSession> OpenSession( RequestChannel channel );
-    Task<RequestConsumerSession> OpenSession( RequestChannel channel, string listenerUri );
+    Task<RequestConsumerSession> OpenSession( string channelUri );
+    Task<RequestConsumerSession> OpenSession( string channelUri, string listenerUri );
 
-    Task<RequestMessage> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics );
-    Task<ResponseMessage> ReadResponse( RequestConsumerSession session, RequestMessage requestMessage );
+    Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics );
+    Task<ResponseMessage> ReadResponse( string sessionId, string requestMessageId );
 
-    Task CloseSession(RequestConsumerSession session);
+    Task CloseSession( string sessionId );
 }

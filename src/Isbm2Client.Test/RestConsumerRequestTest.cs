@@ -8,8 +8,6 @@ namespace Isbm2Client.Test;
 [Collection("Request Channel collection")]
 public class RestConsumerRequestTest
 {
-    private readonly RequestChannelFixture fixture;
-
     private readonly RequestChannel channel;
     private readonly IConsumerRequest consumer;
     private readonly IProviderRequest provider;
@@ -18,8 +16,6 @@ public class RestConsumerRequestTest
 
     public RestConsumerRequestTest( RequestChannelFixture fixture )
     {
-        this.fixture = fixture;
-
         channel = fixture.RequestChannel;
         provider = fixture.Provider;
         consumer = fixture.Consumer;
@@ -28,25 +24,19 @@ public class RestConsumerRequestTest
     [Fact]
     public async Task OpenAndCloseSession()
     {
-        var request = new RestConsumerRequest( fixture.Config );
-        var session = await request.OpenSession( fixture.RequestChannel );
+        RequestConsumerSession session = await consumer.OpenSession( channel.Uri );
 
-        Assert.NotNull( session );
-
-        await request.CloseSession( session );
+        await consumer.CloseSession( session.Id );
     }
 
     [Fact]
     public async Task CantCloseSessionTwice()
     {
-        var request = new RestConsumerRequest(fixture.Config);
-        var session = await request.OpenSession( channel);
+        RequestConsumerSession session = await consumer.OpenSession( channel.Uri);
 
-        Assert.NotNull(session);
+        await consumer.CloseSession(session.Id);
 
-        await request.CloseSession(session);
-
-        Task closeAgain() => request.CloseSession(session);
+        Task closeAgain() => consumer.CloseSession(session.Id);
 
         await Assert.ThrowsAsync<ApiException>(closeAgain);
     }
@@ -54,29 +44,24 @@ public class RestConsumerRequestTest
     [Fact]
     public async Task PostRequest()
     {
-        var request = new RestConsumerRequest(fixture.Config);
-        var session = await request.OpenSession(fixture.RequestChannel);
+        RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
 
-        Assert.NotNull(session);
+        _ = await consumer.PostRequest( session.Id, "Yo!", topics );
 
-        var message = await request.PostRequest( session, "Yo!", topics );
-
-        Assert.NotNull( message );
-
-        await request.CloseSession( session );
+        await consumer.CloseSession( session.Id );
     }
 
     [Fact]
     public async Task PostRequestReadResponse()
     {
-        var providerSession = await provider.OpenSession(channel, topics);
-        var consumerSession = await consumer.OpenSession(channel);
+        var providerSession = await provider.OpenSession(channel.Uri, topics);
+        var consumerSession = await consumer.OpenSession(channel.Uri);
 
-        await consumer.PostRequest(consumerSession, "Yo!", topics);
+        await consumer.PostRequest(consumerSession.Id, "Yo!", topics);
 
         try
         {
-            var requestMessage = await provider.ReadRequest(providerSession);
+            var requestMessage = await provider.ReadRequest(providerSession.Id);
 
             Assert.IsType<MessageContent<string>>(requestMessage.MessageContent);
 
@@ -84,12 +69,12 @@ public class RestConsumerRequestTest
 
             Assert.True(requestContent == "Yo!");
 
-            var responseMessage = await provider.PostResponse(providerSession, requestMessage, "Carrots!");
+            var responseMessage = await provider.PostResponse(providerSession.Id, requestMessage.Id, "Carrots!");
 
             Assert.NotNull( responseMessage );
             Assert.Contains("Carrots", responseMessage.MessageContent.GetContent<string>());
 
-            var message = await consumer.ReadResponse( consumerSession, requestMessage );
+            var message = await consumer.ReadResponse( consumerSession.Id, requestMessage.Id );
 
             Assert.IsType<MessageContent<string>>(message.MessageContent);
 
@@ -100,8 +85,8 @@ public class RestConsumerRequestTest
         }
         finally
         {
-            await consumer.CloseSession(consumerSession);
-            await provider.CloseSession(providerSession);
+            await consumer.CloseSession(consumerSession.Id);
+            await provider.CloseSession(providerSession.Id);
         }
     }
 }

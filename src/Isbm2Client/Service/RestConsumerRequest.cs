@@ -25,21 +25,21 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ConsumerRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestConsumerSession> OpenSession(RequestChannel channel) 
+        public async Task<RequestConsumerSession> OpenSession( string channelUri )
         {
             var sessionParams = new RestModel.Session()
             {
                 SessionType = RestModel.SessionType.RequestConsumer
             };
 
-            var session = await _requestApi.OpenConsumerRequestSessionAsync( channel.Uri, sessionParams );
+            var session = await _requestApi.OpenConsumerRequestSessionAsync( channelUri, sessionParams );
 
             if ( session is null ) throw new Exception( "Uh oh" );
 
             return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>() );
         }
 
-        public async Task<RequestConsumerSession> OpenSession(RequestChannel channel, string listenerUri)
+        public async Task<RequestConsumerSession> OpenSession(string channelUri, string listenerUri)
         {
             var sessionParams = new RestModel.Session()
             {
@@ -47,14 +47,14 @@ namespace Isbm2Client.Service
                 ListenerUrl = listenerUri
             };
 
-            var session = await _requestApi.OpenConsumerRequestSessionAsync(channel.Uri, sessionParams);
+            var session = await _requestApi.OpenConsumerRequestSessionAsync(channelUri, sessionParams);
 
             if (session is null) throw new Exception("Uh oh");
 
             return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>());
         }
 
-        public async Task<RequestMessage> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics )
+        public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics )
         {
             var inputMessageContent = content switch
             {
@@ -70,7 +70,7 @@ namespace Isbm2Client.Service
 
             var inputMessage = new RestModel.Message( messageContent: inputMessageContent, topics: topics.ToList() );
 
-            var message = await _requestApi.PostRequestAsync( session.Id, inputMessage );
+            var message = await _requestApi.PostRequestAsync( sessionId, inputMessage );
 
             Model.MessageContent messageContent = content switch
             {
@@ -87,9 +87,9 @@ namespace Isbm2Client.Service
             return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
         }
 
-        public async Task<ResponseMessage> ReadResponse(RequestConsumerSession session, RequestMessage requestMessage)
+        public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
         {
-            var response = await _requestApi.ReadResponseAsync( session.Id, requestMessage.Id );
+            var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
 
             Model.MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
@@ -106,9 +106,9 @@ namespace Isbm2Client.Service
             return new ResponseMessage(response.MessageId, messageContent, Array.Empty<string>(), "");
         }
 
-        public async Task CloseSession(RequestConsumerSession session)
+        public async Task CloseSession(string sessionId)
         {
-            await _requestApi.CloseSessionAsync(session.Id);
+            await _requestApi.CloseSessionAsync(sessionId);
         }
     }
 }

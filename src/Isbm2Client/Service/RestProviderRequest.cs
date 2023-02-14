@@ -24,7 +24,7 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestProviderSession> OpenSession(RequestChannel channel, IEnumerable<string> topics) 
+        public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics) 
         {
             var sessionParams = new RestModel.Session()
             {
@@ -33,16 +33,16 @@ namespace Isbm2Client.Service
                 FilterExpressions = new List<RestModel.FilterExpression>()
             };
 
-            var session = await _requestApi.OpenProviderRequestSessionAsync( channel.Uri, sessionParams );
+            var session = await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams );
 
             if ( session is null ) throw new Exception( "Uh oh" );
 
             return new RequestProviderSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
         }
 
-        public async Task<RequestMessage> ReadRequest(RequestProviderSession session)
+        public async Task<RequestMessage> ReadRequest(string sessionId)
         {
-            var response = await _requestApi.ReadRequestAsync( session.Id );
+            var response = await _requestApi.ReadRequestAsync( sessionId );
 
             MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
@@ -59,7 +59,7 @@ namespace Isbm2Client.Service
             return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
         }
 
-        public async Task<ResponseMessage> PostResponse<T>( RequestProviderSession session, RequestMessage requestMessage, T content )
+        public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content )
         {
             var inputMessageContent = content switch
             {
@@ -75,7 +75,7 @@ namespace Isbm2Client.Service
 
             var inputMessage = new RestModel.Message( messageContent: inputMessageContent );
 
-            var message = await _requestApi.PostResponseAsync( session.Id, requestMessage.Id, inputMessage );
+            var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, inputMessage );
 
             Model.MessageContent messageContent = content switch
             {
@@ -89,12 +89,12 @@ namespace Isbm2Client.Service
                     throw new Exception("Uh oh")
             };
 
-            return new ResponseMessage( message.MessageId, messageContent, requestMessage.Topics, "" );
+            return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
         }
 
-        public async Task CloseSession( RequestProviderSession session )
+        public async Task CloseSession( string sessionId )
         {
-            await _requestApi.CloseSessionAsync( session.Id );
+            await _requestApi.CloseSessionAsync( sessionId );
         }
     }
 }

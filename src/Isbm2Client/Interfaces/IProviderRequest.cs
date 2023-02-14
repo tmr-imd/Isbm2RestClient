@@ -4,10 +4,10 @@ namespace Isbm2Client.Interface;
 
 public interface IProviderRequest {
     //Task<RequestProviderSession> OpenSession( RequestChannel channel, string topic );
-    Task<RequestProviderSession> OpenSession( RequestChannel channel, IEnumerable<string> topics );
+    Task<RequestProviderSession> OpenSession( string channelUrl, IEnumerable<string> topics );
 
-    Task<RequestMessage> ReadRequest(RequestProviderSession session);
-    Task<ResponseMessage> PostResponse<T>(RequestProviderSession session, RequestMessage requestMessage, T content);
+    Task<RequestMessage> ReadRequest(string sessionId);
+    Task<ResponseMessage> PostResponse<T>(string sessionId, string requestMessageId, T content);
 
-    Task CloseSession(RequestProviderSession session);
+    Task CloseSession(string sessionId);
 }
