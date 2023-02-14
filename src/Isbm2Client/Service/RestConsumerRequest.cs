@@ -54,11 +54,6 @@ namespace Isbm2Client.Service
             return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl, Array.Empty<string>(), Array.Empty<string>());
         }
 
-        public async Task CloseSession(RequestConsumerSession session)
-        {
-            await _requestApi.CloseSessionAsync(session.Id);
-        }
-
         public async Task<RequestMessage> PostRequest<T>( RequestConsumerSession session, T content, IEnumerable<string> topics )
         {
             var inputMessageContent = content switch
@@ -90,6 +85,30 @@ namespace Isbm2Client.Service
             };
 
             return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
+        }
+
+        public async Task<ResponseMessage> ReadResponse(RequestConsumerSession session, RequestMessage requestMessage)
+        {
+            var response = await _requestApi.ReadResponseAsync( session.Id, requestMessage.Id );
+
+            Model.MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
+            {
+                string x =>
+                    new MessageContent<string>(response.MessageId, x),
+
+                Dictionary<string, object> x =>
+                    new MessageContent<Dictionary<string, object>>(response.MessageId, x),
+
+                _ =>
+                    throw new Exception("Uh oh")
+            };
+
+            return new ResponseMessage(response.MessageId, messageContent, Array.Empty<string>(), "");
+        }
+
+        public async Task CloseSession(RequestConsumerSession session)
+        {
+            await _requestApi.CloseSessionAsync(session.Id);
         }
     }
 }
