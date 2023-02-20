@@ -5,6 +5,7 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service
 {
@@ -54,10 +55,10 @@ namespace Isbm2Client.Service
             MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
                 string x => 
-                    new MessageContent<string>( response.MessageId, x),
+                    new MessageString( response.MessageId, x),
 
                 Dictionary<string, object> x => 
-                    new MessageContent<Dictionary<string, object>>( response.MessageId, x ),
+                    new MessageDictionary( response.MessageId, x ),
 
                 _ => 
                     throw new Exception( "Uh oh" )
@@ -66,7 +67,7 @@ namespace Isbm2Client.Service
             return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
         }
 
-        public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content )
+        public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
         {
             var inputMessageContent = content switch
             {
@@ -74,7 +75,16 @@ namespace Isbm2Client.Service
                     new RestModel.MessageContent("text/plain", content: new RestModel.MessageContentContent(x)),
 
                 Dictionary<string, object> x =>
-                    new RestModel.MessageContent("application/json", content: new RestModel.MessageContentContent(x)),
+                    new RestModel.MessageContent(
+                        "application/json", 
+                        content: new RestModel.MessageContentContent(x)
+                    ),
+
+                T x =>
+                    new RestModel.MessageContent(
+                        "application/json",
+                        content: new RestModel.MessageContentContent(ObjectExtensions.AsDictionary(x))
+                    ),
 
                 _ =>
                     throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
@@ -87,10 +97,13 @@ namespace Isbm2Client.Service
             Model.MessageContent messageContent = content switch
             {
                 string x => 
-                    new MessageContent<string>(message.MessageId, x),
+                    new MessageString(message.MessageId, x),
 
                 Dictionary<string, object> x => 
-                    new MessageContent<Dictionary<string, object>>(message.MessageId, x),
+                    new MessageDictionary(message.MessageId, x),
+
+                T x =>
+                    new MessageDictionary(message.MessageId, ObjectExtensions.AsDictionary(x)),
 
                 _ => 
                     throw new Exception("Uh oh")
