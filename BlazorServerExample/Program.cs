@@ -1,4 +1,5 @@
 using BlazorServerExample.Data;
+using BlazorServerExample.Pages;
 using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
@@ -15,8 +16,12 @@ builder.Services.AddSingleton<StructureAssetService>();
 // Example of how you would use Microsoft DI with IsbmClient
 builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"));
 builder.Services.AddScoped<IChannelManagement, RestChannelManagement>();
+builder.Services.AddScoped<IProviderRequest, RestProviderRequest>();
+builder.Services.AddScoped<IConsumerRequest, RestConsumerRequest>();
 
 builder.Services.AddScoped<StructureAssetService>();
+
+builder.Services.AddScoped<RequestViewModel>();
 
 // Once the client grows, we could create a single helper method like this:
 //builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"));
