@@ -102,45 +102,41 @@ public class RestProviderRequestTest
         }
     }
 
-    //[Fact]
-    //public async Task ReadComplexObjectRequest()
-    //{
-    //    var providerSession = await provider.OpenSession(channel.Uri, YO_TOPIC);
-    //    var consumerSession = await consumer.OpenSession(channel.Uri);
+    [Fact]
+    public async Task ReadComplexObjectRequest()
+    {
+        var providerSession = await provider.OpenSession(channel.Uri, YO_TOPIC);
+        var consumerSession = await consumer.OpenSession(channel.Uri);
 
-    //    var inputContent = new TestObject()
-    //    {
-    //        Numbers = new int[] { 23, 45, 100 },
-    //        Text = "Hello",
-    //        Weather = new Dictionary<string, double>()
-    //        {
-    //            {"Devonport", 14 },
-    //            {"Hobart", 2 }
-    //        }
-    //    };
+        var inputContent = new TestObject()
+        {
+            Numbers = new[] { 23, 45, 100 },
+            Text = "Hello",
+            Weather = new Dictionary<string, double>()
+            {
+                {"Devonport", 14.0 },
+                {"Hobart", 2.0 }
+            }
+        };
 
-    //    await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
+        await consumer.PostRequest<TestObject>(consumerSession.Id, inputContent, YO_TOPIC);
 
-    //    try
-    //    {
-    //        var message = await provider.ReadRequest(providerSession.Id);
+        try
+        {
+            var message = await provider.ReadRequest(providerSession.Id);
 
-    //        Assert.IsType<MessageJsonDocument>(message.MessageContent);
+            Assert.IsType<MessageDictionary>(message.MessageContent);
 
-    //        var jsonDocument = message.MessageContent.GetContent<JsonDocument>();
-    //        var content = JsonSerializer.Deserialize<TestObject>(jsonDocument);
+            var content = message.MessageContent.Deserialise<TestObject>();
 
-    //        Assert.NotNull(content);
-
-    //        if (content is not null)
-    //            Assert.True(content.Weather["Hobart"] == 2);
-    //    }
-    //    finally
-    //    {
-    //        await consumer.CloseSession(consumerSession.Id);
-    //        await provider.CloseSession(providerSession.Id);
-    //    }
-    //}
+            Assert.True(content.Weather["Hobart"] == 2);
+        }
+        finally
+        {
+            await consumer.CloseSession(consumerSession.Id);
+            await provider.CloseSession(providerSession.Id);
+        }
+    }
 
     [Fact]
     public async Task ReadRequestPostResponse()
