@@ -67,6 +67,11 @@ namespace Isbm2Client.Service
             return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
         }
 
+        public async Task RemoveRequest(string sessionId)
+        {
+            await _requestApi.RemoveRequestAsync( sessionId );
+        }
+
         public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
         {
             var inputMessageContent = content switch

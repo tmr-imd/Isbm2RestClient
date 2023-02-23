@@ -127,6 +127,11 @@ namespace Isbm2Client.Service
             return new ResponseMessage(response.MessageId, messageContent, Array.Empty<string>(), "");
         }
 
+        public async Task RemoveResponse( string sessionId, string requestId )
+        {
+            await _requestApi.RemoveResponseAsync( sessionId, requestId );
+        }
+
         public async Task CloseSession(string sessionId)
         {
             await _requestApi.CloseSessionAsync(sessionId);

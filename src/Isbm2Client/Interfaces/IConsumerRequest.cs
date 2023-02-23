@@ -9,6 +9,7 @@ public interface IConsumerRequest {
     Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic ) where T : notnull;
     Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics ) where T : notnull;
     Task<ResponseMessage> ReadResponse( string sessionId, string requestMessageId );
+    Task RemoveResponse( string sessionId, string requestId );
 
     Task CloseSession( string sessionId );
 }
