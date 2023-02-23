@@ -41,4 +41,4 @@ public abstract record class MessageContent( string Id )
     }
 }
 public record class MessageString( string Id, string Content ) : MessageContent( Id, Content );
-public record class MessageJsonDocument(string Id, Dictionary<string, object> Content) : MessageContent(Id, Content);
+public record class MessageDictionary(string Id, Dictionary<string, object> Content) : MessageContent(Id, Content);
