@@ -13,7 +13,12 @@ public class RequestViewModel : IAsyncDisposable
     public string ChannelUri { get; set; } = "/fred";
     public string Topic { get; set; } = "Yo!";
 
-    public string Id { get; set; } = "";
+    public string FilterCode { get; set; } = "";
+    public string FilterType { get; set; } = "";
+    public string FilterLocation { get; set; } = "";
+    public string FilterOwner { get; set; } = "";
+    public string FilterCondition { get; set; } = "";
+    public string FilterInspector { get; set; } = "";
     public string Message { get; set; } = "";
 
     public IEnumerable<StructureAsset> StructureAssets { get; set; } = Enumerable.Empty<StructureAsset>();
