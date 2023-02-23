@@ -11,8 +11,9 @@ namespace BlazorServerExample.Pages;
 public class RequestViewModel : IAsyncDisposable
 {
     public string Endpoint { get; set; } = "";
-    public string ChannelUri { get; set; } = "/fred";
-    public string Topic { get; set; } = "Yo!";
+    //public string ChannelUri { get; set; } = "/fred";
+    public string ChannelUri { get; set; } = "/asset-institute/demo/request-response";
+    public string Topic { get; set; } = "Test Topic";
 
     public string FilterCode { get; set; } = "";
     public string FilterType { get; set; } = "";
@@ -20,7 +21,6 @@ public class RequestViewModel : IAsyncDisposable
     public string FilterOwner { get; set; } = "";
     public string FilterCondition { get; set; } = "";
     public string FilterInspector { get; set; } = "";
-    public string Message { get; set; } = "";
 
     public IEnumerable<StructureAsset> StructureAssets { get; set; } = Enumerable.Empty<StructureAsset>();
 
@@ -58,8 +58,6 @@ public class RequestViewModel : IAsyncDisposable
         }
         catch (ApiException)
         {
-            var channel = await channelManagement.GetChannel(ChannelUri);
-
             await channelManagement.DeleteChannel(ChannelUri);
 
             requestChannel = await channelManagement.CreateChannel<RequestChannel>(ChannelUri, "Test");
