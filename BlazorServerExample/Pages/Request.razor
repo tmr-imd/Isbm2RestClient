@@ -1,0 +1,25 @@
+﻿@page "/request-response"
+@using Microsoft.Extensions.Logging
+@inject ILogger<Request> Logger
+
+<PageTitle>Adapter Shell - Request/Response</PageTitle>
+
+
+<h1>Adapter Shell - Request/Response</h1>
+
+<EditForm Model="@viewModel" OnSubmit="@HandleSubmit">
+    <InputTextArea id="name" @bind-Value="viewModel.Message" />
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+@code {
+    private RequestViewModel viewModel = new();
+
+    private void HandleSubmit()
+    {
+        Logger.LogInformation("HandleSubmit called");
+
+        // Process the form
+    }
+}
