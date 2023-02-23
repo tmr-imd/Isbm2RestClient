@@ -4,13 +4,37 @@
 
 <PageTitle>Adapter Shell - Request/Response</PageTitle>
 
-
 <h1>Adapter Shell - Request/Response</h1>
 
 <EditForm Model="@viewModel" OnSubmit="@HandleSubmit">
-    <InputTextArea id="name" @bind-Value="viewModel.Message" />
+    <div class="grid grid-cols-4 gap-2">
+        <h2 class="col-span-full mt-6">ISBM Settings</h2>
 
-    <button type="submit">Submit</button>
+        <h3 class="col-span-2">ISBM Endpoint</h3>
+        <h3>ISBM Channel</h3>
+        <h3>ISBM Topic</h3>
+        <div class="col-span-2">
+            <InputText type="text" class="form-input w-full bg-gray-100" disabled @bind-Value="viewModel.Endpoint" />
+        </div>
+        <div>
+            <InputText type="text" class="form-input w-full" @bind-Value="viewModel.ChannelName" />
+        </div>
+        <div>
+            <InputText type="text" class="form-input w-full" @bind-Value="@viewModel.Topic" />
+        </div>
+
+        <h2 class="col-span-full mt-6">Message Settings</h2>
+        <h3 class="col-span-full">UUID</h3>
+        <div class="col-span-full">
+            <InputText type="text" class="form-input" @bind-Value="@viewModel.Id" />
+        </div>
+        <h3 class="col-span-full">Message</h3>
+        <div class="col-span-full">
+            <InputTextArea class="form-textarea w-full" @bind-Value="viewModel.Message" />
+
+            <button type="submit" class="btn-primary">Submit</button>
+        </div>
+    </div>
 </EditForm>
 
 @code {

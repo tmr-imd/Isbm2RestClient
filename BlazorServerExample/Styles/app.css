@@ -57,7 +57,8 @@
     .form-textarea,
     .form-select,
     .form-multiselect {
-        @apply rounded-md border-gray-300 shadow-sm focus:border-sky-300 focus:ring focus:ring-sky-200 focus:ring-opacity-50;
+        /*@apply rounded-md border-gray-300 shadow-sm focus:border-sky-300 focus:ring focus:ring-sky-200 focus:ring-opacity-50;*/
+        @apply border border-gray-300 rounded-md p-2 text-gray-700;
     }
 
     .form-checkbox {
@@ -73,19 +74,11 @@
     }
 
     .btn-primary {
-        @apply inline-flex justify-center py-1.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:no-underline hover:text-white bg-sky-500 hover:bg-sky-600 focus:ring focus:ring-offset-0 focus:ring-sky-400 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply inline-flex justify-center py-1.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:no-underline hover:text-white bg-teal-500 hover:bg-teal-600 focus:ring focus:ring-offset-0 focus:ring-teal-400 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed;
     }
 
     .btn-danger {
         @apply inline-flex justify-center py-1.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-red-500 bg-red-50 border-red-200 hover:no-underline hover:bg-red-600 hover:text-white focus:ring focus:ring-offset-0 focus:ring-red-400 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed;
-    }
-
-    .holly-tag {
-        @apply inline-flex items-center rounded-full bg-sky-400 px-2 py-px text-gray-100 shadow hover:bg-sky-500;
-    }
-
-    a.holly-tag {
-        @apply hover:text-gray-100 hover:no-underline;
     }
 
     a.menu {
@@ -96,18 +89,12 @@
         @apply font-bold text-gray-500 hover:text-gray-900 hover:no-underline;
     }
 
-    .holly-asset-no {
-        @apply px-2 inline-flex leading-5 rounded-sm bg-sky-200 text-sky-800;
-    }
-
     .tabs a.active {
         @apply border-l border-t border-r rounded-t bg-white text-gray-800;
-        /*@apply border rounded bg-white;*/
     }
 
     .tabs-b a.active {
         @apply border rounded-t bg-white;
-        /*@apply border rounded bg-white;*/
     }
 
     .modal h1 {
