@@ -826,6 +826,10 @@ a.menu.active:hover {
   margin-top: 1.5rem;
 }
 
+.inline-block {
+  display: inline-block;
+}
+
 .flex {
   display: flex;
 }
@@ -842,12 +846,12 @@ a.menu.active:hover {
   display: none;
 }
 
-.h-10 {
-  height: 2.5rem;
+.h-4 {
+  height: 1rem;
 }
 
-.w-10 {
-  width: 2.5rem;
+.w-4 {
+  width: 1rem;
 }
 
 .w-full {
@@ -872,8 +876,12 @@ a.menu.active:hover {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.justify-center {
-  justify-content: center;
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
 }
 
 .gap-2 {
@@ -914,8 +922,8 @@ a.menu.active:hover {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
 }
 
-.fill-blue-600 {
-  fill: #2563eb;
+.fill-gray-600 {
+  fill: #4b5563;
 }
 
 .p-4 {
@@ -976,6 +984,10 @@ a.menu.active:hover {
 }
 
 @media (prefers-color-scheme: dark) {
+  .dark\:fill-gray-300 {
+    fill: #d1d5db;
+  }
+
   .dark\:text-gray-600 {
     --tw-text-opacity: 1;
     color: rgb(75 85 99 / var(--tw-text-opacity));
