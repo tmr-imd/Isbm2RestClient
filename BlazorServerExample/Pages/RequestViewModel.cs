@@ -109,6 +109,7 @@ public class RequestViewModel : IAsyncDisposable
     public async Task Respond()
     {
         var requestMessage = await provider.ReadRequest(providerSession.Id);
+        await provider.RemoveRequest(providerSession.Id);
 
         var json = requestMessage.MessageContent.GetContent<string>();
 
@@ -135,6 +136,7 @@ public class RequestViewModel : IAsyncDisposable
     public async Task<IEnumerable<StructureAsset>> ReadResponse( string requestId )
     {
         var message = await consumer.ReadResponse( consumerSession.Id, requestId );
+        await consumer.RemoveResponse( consumerSession.Id, requestId );
 
         var content = message.MessageContent.GetContent<Dictionary<string, object>>();
 

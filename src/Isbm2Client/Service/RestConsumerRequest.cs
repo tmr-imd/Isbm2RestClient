@@ -90,6 +90,11 @@ public class RestConsumerRequest : IConsumerRequest
         await _requestApi.RemoveResponseAsync( sessionId, requestId );
     }
 
+        public async Task RemoveResponse( string sessionId, string requestId )
+        {
+            await _requestApi.RemoveResponseAsync( sessionId, requestId );
+        }
+
     public async Task CloseSession(string sessionId)
     {
         await _requestApi.CloseSessionAsync(sessionId);
