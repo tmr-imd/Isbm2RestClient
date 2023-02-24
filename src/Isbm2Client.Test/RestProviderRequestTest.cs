@@ -70,7 +70,7 @@ public class RestProviderRequestTest
     }
 
     [Fact]
-    public async Task ReadDictionaryRequest()
+    public async Task ReadJsonDocumentRequest()
     {
         var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC);
         var consumerSession = await consumer.OpenSession( channel.Uri );
@@ -81,21 +81,23 @@ public class RestProviderRequestTest
             { "wilma", "betty" }
         };
 
-        await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
+        var document = JsonSerializer.SerializeToDocument( inputContent );
+
+        await consumer.PostRequest(consumerSession.Id, document, YO_TOPIC);
 
         try
         {
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageDictionary>( message.MessageContent );
+            Assert.IsType<MessageJsonDocument>( message.MessageContent );
 
-            var content = message.MessageContent.GetContent<Dictionary<string, object>>();
+            var content = message.MessageContent.GetContent<JsonDocument>();
 
             Assert.NotNull(content);
 
             if ( content is not null )
-                Assert.Contains("barney", (string)content["fred"]);
+                Assert.Contains( "barney", content.RootElement.GetProperty("fred").GetString() );
         }
         finally
         {
@@ -121,14 +123,14 @@ public class RestProviderRequestTest
             }
         };
 
-        await consumer.PostRequest<TestObject>(consumerSession.Id, inputContent, YO_TOPIC);
+        await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
 
         try
         {
             var message = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageDictionary>(message.MessageContent);
+            Assert.IsType<MessageJsonDocument>(message.MessageContent);
 
             var content = message.MessageContent.Deserialise<TestObject>();
 

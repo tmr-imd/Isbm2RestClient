@@ -9,9 +9,9 @@ public abstract record class MessageContent( string Id )
 
     public T GetContent<T>()
     {
-        if ( typeof(T) != typeof(string) && typeof(T) != typeof(Dictionary<string, object>) )
+        if ( typeof(T) != typeof(string) && typeof(T) != typeof(JsonDocument) )
         {
-            throw new ArgumentException("Requested type must be one of the following: string or Dictionary<string, object>");
+            throw new ArgumentException("Requested type must be one of the following: string or JsonDocument");
         }
 
         if (instance is not T)
@@ -22,9 +22,14 @@ public abstract record class MessageContent( string Id )
 
     public T Deserialise<T>() where T : class, new()
     {
-        if ( instance is Dictionary<string, object> dictionary )
+        if ( instance is JsonDocument document )
         {
-            return ObjectExtensions.ToObject<T>( dictionary );
+            var typedObject = JsonSerializer.Deserialize<T>( document );
+
+            if (typedObject is null)
+                throw new InvalidCastException($"Could not deserialise JsonDocument to: {typeof(T).Name}");
+
+            return typedObject;
         }
 
         throw new InvalidOperationException( "Uh oh" );
@@ -32,13 +37,13 @@ public abstract record class MessageContent( string Id )
 
     public MessageContent( string id, object instance ) : this(id)
     {
-        if ( instance is not string && instance is not Dictionary<string, object> )
+        if ( instance is not string && instance is not JsonDocument )
         {
-            throw new ArgumentException("Invalid instance found. Must be the following types: string or Dictionary<string, object>");
+            throw new ArgumentException("Invalid instance found. Must be the following types: string or JsonDocument");
         }
 
         this.instance = instance;
     }
 }
 public record class MessageString( string Id, string Content ) : MessageContent( Id, Content );
-public record class MessageDictionary(string Id, Dictionary<string, object> Content) : MessageContent(Id, Content);
+public record class MessageJsonDocument(string Id, JsonDocument Content) : MessageContent(Id, Content);

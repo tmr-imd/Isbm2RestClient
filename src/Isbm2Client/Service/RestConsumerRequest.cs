@@ -70,7 +70,7 @@ namespace Isbm2Client.Service
                 string x => 
                     new RestModel.MessageContent("text/plain", content: new MessageContentContent(x)),
 
-                Dictionary<string, object> x => 
+                JsonDocument x => 
                     new RestModel.MessageContent(
                         "application/json", 
                         content: new MessageContentContent(x)
@@ -79,7 +79,7 @@ namespace Isbm2Client.Service
                 T x =>
                     new RestModel.MessageContent(
                         "application/json",
-                        content: new MessageContentContent(ObjectExtensions.AsDictionary(x))
+                        content: new MessageContentContent(JsonSerializer.SerializeToDocument(x))
                     ),
 
                 _ => 
@@ -95,11 +95,11 @@ namespace Isbm2Client.Service
                 string x => 
                     new MessageString(message.MessageId, x),
 
-                Dictionary<string, object> x => 
-                    new MessageDictionary(message.MessageId, x),
+                JsonDocument x => 
+                    new MessageJsonDocument(message.MessageId, x),
 
                 T x =>
-                    new MessageDictionary(message.MessageId, ObjectExtensions.AsDictionary(x)),
+                    new MessageJsonDocument(message.MessageId, JsonSerializer.SerializeToDocument(x)),
 
                 _ =>
                     throw new Exception("Uh oh")
@@ -117,8 +117,8 @@ namespace Isbm2Client.Service
                 string x =>
                     new MessageString(response.MessageId, x),
 
-                Dictionary<string, object> x =>
-                    new MessageDictionary(response.MessageId, x),
+                JsonDocument x =>
+                    new MessageJsonDocument(response.MessageId, x),
 
                 _ =>
                     throw new Exception("Uh oh")

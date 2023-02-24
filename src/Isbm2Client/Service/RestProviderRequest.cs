@@ -6,6 +6,7 @@ using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
+using System.Text.Json;
 
 namespace Isbm2Client.Service
 {
@@ -57,8 +58,8 @@ namespace Isbm2Client.Service
                 string x => 
                     new MessageString( response.MessageId, x),
 
-                Dictionary<string, object> x => 
-                    new MessageDictionary( response.MessageId, x ),
+                JsonDocument x => 
+                    new MessageJsonDocument( response.MessageId, x ),
 
                 _ => 
                     throw new Exception( "Uh oh" )
@@ -79,7 +80,7 @@ namespace Isbm2Client.Service
                 string x =>
                     new RestModel.MessageContent("text/plain", content: new RestModel.MessageContentContent(x)),
 
-                Dictionary<string, object> x =>
+                JsonDocument x =>
                     new RestModel.MessageContent(
                         "application/json", 
                         content: new RestModel.MessageContentContent(x)
@@ -88,7 +89,7 @@ namespace Isbm2Client.Service
                 T x =>
                     new RestModel.MessageContent(
                         "application/json",
-                        content: new RestModel.MessageContentContent(ObjectExtensions.AsDictionary(x))
+                        content: new RestModel.MessageContentContent(JsonSerializer.SerializeToDocument(x))
                     ),
 
                 _ =>
@@ -104,11 +105,11 @@ namespace Isbm2Client.Service
                 string x => 
                     new MessageString(message.MessageId, x),
 
-                Dictionary<string, object> x => 
-                    new MessageDictionary(message.MessageId, x),
+                JsonDocument x => 
+                    new MessageJsonDocument(message.MessageId, x),
 
                 T x =>
-                    new MessageDictionary(message.MessageId, ObjectExtensions.AsDictionary(x)),
+                    new MessageJsonDocument(message.MessageId, JsonSerializer.SerializeToDocument(x)),
 
                 _ => 
                     throw new Exception("Uh oh")

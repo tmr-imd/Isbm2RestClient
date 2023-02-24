@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 using OpenAPIDateConverter = Isbm2RestClient.Client.OpenAPIDateConverter;
 using System.Reflection;
+using System.Text.Json;
 
 namespace Isbm2RestClient.Model
 {
@@ -48,10 +49,10 @@ namespace Isbm2RestClient.Model
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageContentContent" /> class
-        /// with the <see cref="Dictionary{string, Object}" /> class
+        /// with the <see cref="JsonDocument" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of Dictionary&lt;string, Object&gt;.</param>
-        public MessageContentContent(Dictionary<string, Object> actualInstance)
+        public MessageContentContent(JsonDocument actualInstance)
         {
             this.IsNullable = false;
             this.SchemaType= "oneOf";
@@ -72,7 +73,7 @@ namespace Isbm2RestClient.Model
             }
             set
             {
-                if (value.GetType() == typeof(Dictionary<string, Object>))
+                if (value.GetType() == typeof(JsonDocument))
                 {
                     this._actualInstance = value;
                 }
@@ -98,13 +99,13 @@ namespace Isbm2RestClient.Model
         }
 
         /// <summary>
-        /// Get the actual instance of `Dictionary&lt;string, Object&gt;`. If the actual instance is not `Dictionary&lt;string, Object&gt;`,
+        /// Get the actual instance of `JsonDocument`. If the actual instance is not `JsonDocument`,
         /// the InvalidClassException will be thrown
         /// </summary>
-        /// <returns>An instance of Dictionary&lt;string, Object&gt;</returns>
-        public Dictionary<string, Object> GetDictionary()
+        /// <returns>An instance of JsonDocument</returns>
+        public JsonDocument GetJsonDocument()
         {
-            return (Dictionary<string, Object>)this.ActualInstance;
+            return (JsonDocument)this.ActualInstance;
         }
 
         /// <summary>
@@ -126,6 +127,9 @@ namespace Isbm2RestClient.Model
         /// <returns>JSON string presentation of the object</returns>
         public override string ToJson()
         {
+            if ( this.ActualInstance is JsonDocument )
+                return System.Text.Json.JsonSerializer.Serialize( this.ActualInstance );
+
             return JsonConvert.SerializeObject(this.ActualInstance, MessageContentContent.SerializerSettings);
         }
 
@@ -148,21 +152,26 @@ namespace Isbm2RestClient.Model
             try
             {
                 // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
-                if (typeof(Dictionary<string, Object>).GetProperty("AdditionalProperties") == null)
+                if (typeof(object).GetProperty("AdditionalProperties") == null)
                 {
-                    newMessageContentContent = new MessageContentContent(JsonConvert.DeserializeObject<Dictionary<string, Object>>(jsonString, MessageContentContent.SerializerSettings));
+                    var document = System.Text.Json.JsonDocument.Parse(jsonString);
+                    newMessageContentContent = new MessageContentContent(document);
+                    
+                    //var document = System.Text.Json.JsonSerializer.Deserialize<object>( jsonString );
+                    //newMessageContentContent = new MessageContentContent( System.Text.Json.JsonSerializer.SerializeToDocument(document) );
                 }
                 else
                 {
-                    newMessageContentContent = new MessageContentContent(JsonConvert.DeserializeObject<Dictionary<string, Object>>(jsonString, MessageContentContent.AdditionalPropertiesSerializerSettings));
+                    var document = System.Text.Json.JsonDocument.Parse(jsonString);
+                    newMessageContentContent = new MessageContentContent(document);
                 }
-                matchedTypes.Add("Dictionary<string, Object>");
+                matchedTypes.Add("JsonDocument");
                 match++;
             }
             catch (Exception exception)
             {
                 // deserialization failed, try the next one
-                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into Dictionary<string, Object>: {1}", jsonString, exception.ToString()));
+                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into JsonDocument: {1}", jsonString, exception.ToString()));
             }
 
             try
@@ -258,7 +267,7 @@ namespace Isbm2RestClient.Model
         /// <param name="writer">JSON writer</param>
         /// <param name="value">Object to be converted into a JSON string</param>
         /// <param name="serializer">JSON Serializer</param>
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
         {
             writer.WriteRawValue((string)(typeof(MessageContentContent).GetMethod("ToJson").Invoke(value, null)));
         }
@@ -271,29 +280,40 @@ namespace Isbm2RestClient.Model
         /// <param name="existingValue">Existing value</param>
         /// <param name="serializer">JSON Serializer</param>
         /// <returns>The object converted from the JSON string</returns>
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
         {
             if (!MoveToContent(reader)) return null;
             return ReadStringOrObject(reader, objectType, existingValue, serializer);
         }
 
-        private object ReadStringOrObject(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+        private object ReadStringOrObject(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer) {
             // XXX: Generated code expected a JObject but it could be a string.
             // Also, want to raise the appropriate exception, rather than a generic reader error,
             // if the value's type does not match the schema.
-            switch(reader.TokenType) {
-            case JsonToken.Null:
-                return null;
-            case JsonToken.String:
-                return MessageContentContent.FromJson(String.Format("{0}{1}{0}", 
-                        reader.QuoteChar, 
-                        ((string)reader.Value).Replace($"{reader.QuoteChar}", $"\\{reader.QuoteChar}")));
-            case JsonToken.StartObject:
-                return MessageContentContent.FromJson(JObject.Load(reader).ToString(Formatting.None));
-            default:
-                var jsonString = reader.Value.ToString();
-                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into string or Dictionary<string, Object>", jsonString));
-                throw new InvalidDataException("The JSON string `" + jsonString + "` cannot be deserialized into any schema defined.");
+            switch(reader.TokenType) 
+            {
+                case JsonToken.Null:
+                    return null;
+
+                case JsonToken.String:
+                    return new MessageContentContent( (string)reader.Value );
+                    //return new MessageContentContent( System.Text.Json.JsonSerializer.SerializeToDocument($"'{(string)reader.Value}'") );
+                    //return System.Text.Json.JsonSerializer.Deserialize<JsonDocument>(String.Format("{0}{1}{0}",
+                    //        reader.QuoteChar, 
+                    //        ((string)reader.Value).Replace($"{reader.QuoteChar}", $"\\{reader.QuoteChar}")) );
+
+                    //return MessageContentContent.FromJson(String.Format("{0}{1}{0}", 
+                    //        reader.QuoteChar, 
+                    //        ((string)reader.Value).Replace($"{reader.QuoteChar}", $"\\{reader.QuoteChar}")));
+
+                case JsonToken.StartObject:
+                    return MessageContentContent.FromJson(JObject.Load(reader).ToString(Formatting.None));
+                    //return System.Text.Json.JsonSerializer.SerializeToDocument( JObject.Load(reader).ToString(Formatting.None) );
+
+                default:
+                    var jsonString = reader.Value.ToString();
+                    System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into string or JsonDocument", jsonString));
+                    throw new InvalidDataException("The JSON string `" + jsonString + "` cannot be deserialized into any schema defined.");
             }
         }
 

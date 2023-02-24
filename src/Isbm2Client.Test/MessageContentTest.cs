@@ -1,6 +1,7 @@
 ﻿using Isbm2Client.Extensions;
 using Isbm2Client.Model;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Isbm2Client.Test
 {
@@ -30,47 +31,50 @@ namespace Isbm2Client.Test
         }
 
         [Fact]
-        public void DictionaryContent()
+        public void JsonDocumentContent()
         {
-            var dictionary = ObjectExtensions.AsDictionary(complexObject);
-            var messageContent = new MessageDictionary(id, dictionary);
+            var inputDocument = JsonSerializer.SerializeToDocument( complexObject );
+            var messageContent = new MessageJsonDocument(id, inputDocument);
 
-            var content = messageContent.GetContent<Dictionary<string, object>>();
+            var document = messageContent.GetContent<JsonDocument>();
 
-            Assert.IsType<Dictionary<string, double>>( content["Weather"] );
+            Assert.NotNull( document );
 
-            var subContent = (Dictionary<string, double>)content["Weather"];
+            if ( document is not null )
+            {
+                var weather = document.RootElement.GetProperty("Weather");
 
-            Assert.True(subContent["Devonport"] == 12.6);
+                Assert.True(weather.GetProperty("Devonport").GetDouble() == 12.6);
+            }
         }
 
         [Fact]
         public void ComplexContent()
         {
-            var dictionary = ObjectExtensions.AsDictionary( complexObject );
-            var messageContent = new MessageDictionary(id, dictionary);
+            var document = JsonSerializer.SerializeToDocument(complexObject);
+            var messageContent = new MessageJsonDocument(id, document);
 
             var content = messageContent.Deserialise<TestObject>();
 
-            Assert.True( content.Weather["Devonport"] == 12.6 );
+            Assert.True(content.Weather["Devonport"] == 12.6);
         }
 
         [Fact]
         public void ComplexContentTheWrongWay()
         {
-            var dictionary = ObjectExtensions.AsDictionary(complexObject);
-            var messageContent = new MessageDictionary(id, dictionary);
+            var document = JsonSerializer.SerializeToDocument(complexObject);
+            var messageContent = new MessageJsonDocument(id, document);
 
             void wrongBet() => messageContent.GetContent<TestObject>();
 
-            Assert.Throws<ArgumentException>( wrongBet );
+            Assert.Throws<ArgumentException>(wrongBet);
         }
 
         [Fact]
         public void InvalidCast()
         {
-            var dictionary = ObjectExtensions.AsDictionary(complexObject);
-            MessageDictionary messageContent = new(id, dictionary);
+            var document = JsonSerializer.SerializeToDocument(complexObject);
+            MessageJsonDocument messageContent = new(id, document);
 
             void badCast() => messageContent.GetContent<string>();
 
