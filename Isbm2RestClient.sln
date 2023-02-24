@@ -7,13 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2RestClient", "src\Isbm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2RestClient.Test", "src\Isbm2RestClient.Test\Isbm2RestClient.Test.csproj", "{19F1DEBC-DE5E-4517-8062-F000CD499087}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IsbmClientExample", "src\IsbmClientExample\IsbmClientExample.csproj", "{78F9355B-CE55-48A8-AE25-F090734B0F67}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2Client", "src\Isbm2Client\Isbm2Client.csproj", "{68DFEE51-DF37-482B-AA6B-E50A0C65532E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2Client.Test", "src\Isbm2Client.Test\Isbm2Client.Test.csproj", "{1C5970E2-BBFD-485B-93D4-49FA2E748862}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorServerExample", "BlazorServerExample\BlazorServerExample.csproj", "{569474FA-2B92-45F1-A9AA-E6F6AB6F7EEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorServerExample", "BlazorServerExample\BlazorServerExample.csproj", "{569474FA-2B92-45F1-A9AA-E6F6AB6F7EEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		{19F1DEBC-DE5E-4517-8062-F000CD499087}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19F1DEBC-DE5E-4517-8062-F000CD499087}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19F1DEBC-DE5E-4517-8062-F000CD499087}.Release|Any CPU.Build.0 = Release|Any CPU
-		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{78F9355B-CE55-48A8-AE25-F090734B0F67}.Release|Any CPU.Build.0 = Release|Any CPU
 		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68DFEE51-DF37-482B-AA6B-E50A0C65532E}.Release|Any CPU.ActiveCfg = Release|Any CPU
