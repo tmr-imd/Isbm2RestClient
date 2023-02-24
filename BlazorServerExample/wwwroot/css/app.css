@@ -955,6 +955,16 @@ a.menu.active:hover {
   color: rgb(239 68 68 / var(--tw-text-opacity));
 }
 
+/* 
+    To generate css - run this from the command line in the root of this project:
+
+    npx tailwindcss -i .\Styles\app.css -o .\wwwroot\css\app.css
+
+    There is a --watch option. But that introduced file locking issues for me:
+
+    npx tailwindcss -i .\Styles\app.css -o .\wwwroot\css\app.css --watch
+*/
+
 .validation-message {
   color: red;
 }

@@ -2,6 +2,16 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* 
+    To generate css - run this from the command line in the root of this project:
+
+    npx tailwindcss -i .\Styles\app.css -o .\wwwroot\css\app.css
+
+    There is a --watch option. But that introduced file locking issues for me:
+
+    npx tailwindcss -i .\Styles\app.css -o .\wwwroot\css\app.css --watch
+*/
+
 @layer base {
     h1 {
         @apply text-3xl font-medium tracking-tight text-gray-900 pb-2;
