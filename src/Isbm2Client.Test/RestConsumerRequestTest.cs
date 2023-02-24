@@ -62,6 +62,7 @@ public class RestConsumerRequestTest
             await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC);
 
             var requestMessage = await provider.ReadRequest(providerSession.Id);
+            await provider.RemoveRequest( providerSession.Id );
 
             Assert.IsType<MessageString>(requestMessage.MessageContent);
 
@@ -75,6 +76,7 @@ public class RestConsumerRequestTest
             Assert.Contains("Carrots", responseMessage.MessageContent.GetContent<string>());
 
             var message = await consumer.ReadResponse( consumerSession.Id, requestMessage.Id );
+            await consumer.RemoveResponse( consumerSession.Id, requestMessage.Id );
 
             Assert.IsType<MessageString>(message.MessageContent);
 

@@ -53,6 +53,7 @@ public class RestProviderRequestTest
         try
         {
             var message = await provider.ReadRequest( providerSession.Id );
+            await provider.RemoveRequest( providerSession.Id );
 
             Assert.IsType<MessageString>( message.MessageContent );
 
@@ -85,6 +86,7 @@ public class RestProviderRequestTest
         try
         {
             var message = await provider.ReadRequest( providerSession.Id );
+            await provider.RemoveRequest( providerSession.Id );
 
             Assert.IsType<MessageDictionary>( message.MessageContent );
 
@@ -124,6 +126,7 @@ public class RestProviderRequestTest
         try
         {
             var message = await provider.ReadRequest(providerSession.Id);
+            await provider.RemoveRequest( providerSession.Id );
 
             Assert.IsType<MessageDictionary>(message.MessageContent);
 
@@ -149,6 +152,7 @@ public class RestProviderRequestTest
         try
         {
             var requestMessage = await provider.ReadRequest(providerSession.Id);
+            await provider.RemoveRequest( providerSession.Id );
 
             Assert.IsType<MessageString>(requestMessage.MessageContent);
 
