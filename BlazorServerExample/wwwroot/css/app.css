@@ -956,11 +956,11 @@ a.menu.active:hover {
 }
 
 /* 
-    To generate css - run this from the command line in the root of this project:
+    Build target in .csproj runs the following each time the code is compiled:
 
     npx tailwindcss -i .\Styles\app.css -o .\wwwroot\css\app.css
 
-    There is a --watch option. But that introduced file locking issues for me:
+    If you want to make changes on the fly, run the following on the command line:
 
     npx tailwindcss -i .\Styles\app.css -o .\wwwroot\css\app.css --watch
 */
