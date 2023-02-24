@@ -63,7 +63,7 @@
                         </svg>
                         <span class="sr-only">Loading...</span>
                     </span>
-                    <span class="align-center">@(working ? "Working..." : "Request")</span>
+                    <span class="align-center">@(working ? (!viewModel.Ready ? "Preparing..." : "Working...") : "Request")</span>
                 </div>
             </button>
             <button class="btn" disabled="@working" @onclick="() => Clear()" @onclick:preventDefault="true">Clear</button>
@@ -108,6 +108,19 @@
 @code {
     bool working;
     string error = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        working = true;
+
+        await InvokeAsync( StateHasChanged );
+
+        await viewModel.Setup();
+
+        working = false;
+
+        await base.OnInitializedAsync();
+    }
 
     private async Task HandleSubmit()
     {

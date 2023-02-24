@@ -22,6 +22,8 @@ public class RequestViewModel : IAsyncDisposable
     public string FilterCondition { get; set; } = "";
     public string FilterInspector { get; set; } = "";
 
+    public bool Ready { get; set; }
+
     public IEnumerable<StructureAsset> StructureAssets { get; set; } = Enumerable.Empty<StructureAsset>();
 
     private readonly IChannelManagement channelManagement;
@@ -41,8 +43,6 @@ public class RequestViewModel : IAsyncDisposable
         this.provider = provider;
         this.consumer = consumer;
         this.service = service;
-
-        Task.Run( async () => await Setup() );
     }
 
     public async ValueTask DisposeAsync()
@@ -50,8 +50,10 @@ public class RequestViewModel : IAsyncDisposable
         await Teardown();
     }
 
-    private async Task Setup()
+    public async Task Setup()
     {
+        if ( Ready ) return;
+
         try
         {
             requestChannel = await channelManagement.CreateChannel<RequestChannel>(ChannelUri, "Test");
@@ -65,6 +67,8 @@ public class RequestViewModel : IAsyncDisposable
 
         providerSession = await provider.OpenSession(ChannelUri, Topic);
         consumerSession = await consumer.OpenSession(ChannelUri);
+
+        Ready = true;
     }
 
     private async Task Teardown()
