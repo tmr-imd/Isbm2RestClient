@@ -5,6 +5,7 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service
 {
@@ -24,7 +25,14 @@ namespace Isbm2Client.Service
             _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
         }
 
-        public async Task<RequestProviderSession> OpenSession(RequestChannel channel, IEnumerable<string> topics) 
+        public Task<RequestProviderSession> OpenSession(string channelUrl, string topic)
+        {
+            var topics = new[] { topic };
+
+            return OpenSession( channelUrl, topics );
+        }
+
+        public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics) 
         {
             var sessionParams = new RestModel.Session()
             {
@@ -33,35 +41,85 @@ namespace Isbm2Client.Service
                 FilterExpressions = new List<RestModel.FilterExpression>()
             };
 
-            var session = await _requestApi.OpenProviderRequestSessionAsync( channel.Uri, sessionParams );
+            var session = await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams );
 
             if ( session is null ) throw new Exception( "Uh oh" );
 
-            return new RequestProviderSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
+            return new RequestProviderSession( session.SessionId, null, sessionParams.Topics.ToArray(), Array.Empty<string>() );
         }
 
-        public async Task CloseSession( RequestProviderSession session )
+        public async Task<RequestMessage> ReadRequest(string sessionId)
         {
-            await _requestApi.CloseSessionAsync( session.Id );
-        }
-
-        public async Task<RequestMessage> ReadRequest(RequestProviderSession session)
-        {
-            var response = await _requestApi.ReadRequestAsync( session.Id );
+            var response = await _requestApi.ReadRequestAsync( sessionId );
 
             MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
                 string x => 
-                    new MessageContent<string>( response.MessageId, x),
+                    new MessageString( response.MessageId, x),
 
                 Dictionary<string, object> x => 
-                    new MessageContent<Dictionary<string, object>>( response.MessageId, x ),
+                    new MessageDictionary( response.MessageId, x ),
 
                 _ => 
                     throw new Exception( "Uh oh" )
             };
 
             return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
+        }
+
+        public async Task RemoveRequest(string sessionId)
+        {
+            await _requestApi.RemoveRequestAsync( sessionId );
+        }
+
+        public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
+        {
+            var inputMessageContent = content switch
+            {
+                string x =>
+                    new RestModel.MessageContent("text/plain", content: new RestModel.MessageContentContent(x)),
+
+                Dictionary<string, object> x =>
+                    new RestModel.MessageContent(
+                        "application/json", 
+                        content: new RestModel.MessageContentContent(x)
+                    ),
+
+                T x =>
+                    new RestModel.MessageContent(
+                        "application/json",
+                        content: new RestModel.MessageContentContent(ObjectExtensions.AsDictionary(x))
+                    ),
+
+                _ =>
+                    throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
+            };
+
+            var inputMessage = new RestModel.Message( messageContent: inputMessageContent );
+
+            var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, inputMessage );
+
+            Model.MessageContent messageContent = content switch
+            {
+                string x => 
+                    new MessageString(message.MessageId, x),
+
+                Dictionary<string, object> x => 
+                    new MessageDictionary(message.MessageId, x),
+
+                T x =>
+                    new MessageDictionary(message.MessageId, ObjectExtensions.AsDictionary(x)),
+
+                _ => 
+                    throw new Exception("Uh oh")
+            };
+
+            return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
+        }
+
+        public async Task CloseSession( string sessionId )
+        {
+            await _requestApi.CloseSessionAsync( sessionId );
         }
     }
 }

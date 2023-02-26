@@ -1,24 +1,22 @@
 using Isbm2Client.Interface;
 using Isbm2Client.Model;
-using Isbm2Client.Service;
+using Isbm2RestClient.Client;
+using System.Text.Json;
 
 namespace Isbm2Client.Test;
 
-[Collection("Request Channel collection")]
+[Collection("Request Provider collection")]
 public class RestProviderRequestTest
 {
-    private readonly RequestChannelFixture fixture;
-
     private readonly RequestChannel channel;
     private readonly IConsumerRequest consumer;
     private readonly IProviderRequest provider;
 
-    private readonly string[] topics = { "topic!" };
+    private static readonly string YO = "Yo!";
+    private static readonly string YO_TOPIC = "Yo Topic!";
 
-    public RestProviderRequestTest( RequestChannelFixture fixture )
+    public RestProviderRequestTest( RequestProviderFixture fixture )
     {
-        this.fixture = fixture;
-
         channel = fixture.RequestChannel;
         provider = fixture.Provider;
         consumer = fixture.Consumer;
@@ -27,45 +25,55 @@ public class RestProviderRequestTest
     [Fact]
     public async Task OpenAndCloseSession()
     {
-        var request = new RestProviderRequest( fixture.Config );
-        var session = await request.OpenSession( channel, topics );
+        var session = await provider.OpenSession( channel.Uri, YO_TOPIC );
 
-        Assert.NotNull( session );
+        await provider.CloseSession( session.Id );
+    }
 
-        await request.CloseSession( session );
+    [Fact]
+    public async Task CantCloseSessionTwice()
+    {
+        var session = await provider.OpenSession(channel.Uri, YO_TOPIC );
+
+        await provider.CloseSession(session.Id);
+
+        Task closeAgain() => provider.CloseSession(session.Id);
+
+        await Assert.ThrowsAsync<ApiException>( closeAgain );
     }
 
     [Fact]
     public async Task ReadStringRequest()
     {
-        var providerSession = await provider.OpenSession( channel, topics );
-        var consumerSession = await consumer.OpenSession( channel );
+        var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC );
+        var consumerSession = await consumer.OpenSession( channel.Uri );
 
-        await consumer.PostRequest(consumerSession, "Yo!", topics);
+        await consumer.PostRequest(consumerSession.Id, YO, YO_TOPIC);
 
         try
         {
-            var message = await provider.ReadRequest( providerSession );
+            var message = await provider.ReadRequest( providerSession.Id );
+            await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageContent<string>>( message.MessageContent );
+            Assert.IsType<MessageString>( message.MessageContent );
 
             var content = message.MessageContent.GetContent<string>();
 
             Assert.NotNull(content);
-            Assert.Contains("Yo!", content);
+            Assert.Contains(YO, content);
         }
         finally
         {
-            await consumer.CloseSession( consumerSession );
-            await provider.CloseSession( providerSession );
+            await consumer.CloseSession( consumerSession.Id );
+            await provider.CloseSession( providerSession.Id );
         }
     }
 
     [Fact]
     public async Task ReadDictionaryRequest()
     {
-        var providerSession = await provider.OpenSession( channel, topics );
-        var consumerSession = await consumer.OpenSession( channel );
+        var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC);
+        var consumerSession = await consumer.OpenSession( channel.Uri );
 
         var inputContent = new Dictionary<string, object>()
         {
@@ -73,23 +81,94 @@ public class RestProviderRequestTest
             { "wilma", "betty" }
         };
 
-        await consumer.PostRequest(consumerSession, inputContent, topics);
+        await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
 
         try
         {
-            var message = await provider.ReadRequest( providerSession );
+            var message = await provider.ReadRequest( providerSession.Id );
+            await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageContent<Dictionary<string, object>>>( message.MessageContent );
+            Assert.IsType<MessageDictionary>( message.MessageContent );
 
             var content = message.MessageContent.GetContent<Dictionary<string, object>>();
 
             Assert.NotNull(content);
-            Assert.Contains("barney", (string)content["fred"]);
+
+            if ( content is not null )
+                Assert.Contains("barney", (string)content["fred"]);
         }
         finally
         {
-            await consumer.CloseSession( consumerSession );
-            await provider.CloseSession( providerSession );
+            await consumer.CloseSession( consumerSession.Id );
+            await provider.CloseSession( providerSession.Id );
+        }
+    }
+
+    [Fact]
+    public async Task ReadComplexObjectRequest()
+    {
+        var providerSession = await provider.OpenSession(channel.Uri, YO_TOPIC);
+        var consumerSession = await consumer.OpenSession(channel.Uri);
+
+        var inputContent = new TestObject()
+        {
+            Numbers = new[] { 23, 45, 100 },
+            Text = "Hello",
+            Weather = new Dictionary<string, double>()
+            {
+                {"Devonport", 14.0 },
+                {"Hobart", 2.0 }
+            }
+        };
+
+        await consumer.PostRequest<TestObject>(consumerSession.Id, inputContent, YO_TOPIC);
+
+        try
+        {
+            var message = await provider.ReadRequest(providerSession.Id);
+            await provider.RemoveRequest( providerSession.Id );
+
+            Assert.IsType<MessageDictionary>(message.MessageContent);
+
+            var content = message.MessageContent.Deserialise<TestObject>();
+
+            Assert.True(content.Weather["Hobart"] == 2);
+        }
+        finally
+        {
+            await consumer.CloseSession(consumerSession.Id);
+            await provider.CloseSession(providerSession.Id);
+        }
+    }
+
+    [Fact]
+    public async Task ReadRequestPostResponse()
+    {
+        var providerSession = await provider.OpenSession(channel.Uri, YO_TOPIC);
+        var consumerSession = await consumer.OpenSession(channel.Uri);
+
+        await consumer.PostRequest(consumerSession.Id, YO, YO_TOPIC);
+
+        try
+        {
+            var requestMessage = await provider.ReadRequest(providerSession.Id);
+            await provider.RemoveRequest( providerSession.Id );
+
+            Assert.IsType<MessageString>(requestMessage.MessageContent);
+
+            var content = requestMessage.MessageContent.GetContent<string>();
+
+            Assert.True( content == YO );
+
+            var message = await provider.PostResponse( providerSession.Id, requestMessage.Id, "Carrots!" );
+
+            Assert.NotNull( message );
+            Assert.Contains( "Carrots", message.MessageContent.GetContent<string>() );
+        }
+        finally
+        {
+            await consumer.CloseSession(consumerSession.Id);
+            await provider.CloseSession(providerSession.Id);
         }
     }
 }

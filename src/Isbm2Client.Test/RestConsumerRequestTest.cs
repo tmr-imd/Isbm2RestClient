@@ -1,41 +1,94 @@
+using Isbm2Client.Interface;
 using Isbm2Client.Model;
-using Isbm2Client.Service;
+using Isbm2RestClient.Client;
 
 namespace Isbm2Client.Test;
 
-[Collection("Request Channel collection")]
+[Collection("Request Consumer collection")]
 public class RestConsumerRequestTest
 {
-    private readonly RequestChannelFixture fixture;
+    private readonly RequestChannel channel;
+    private readonly IConsumerRequest consumer;
+    private readonly IProviderRequest provider;
 
-    public RestConsumerRequestTest( RequestChannelFixture fixture )
+    private static readonly string BOO = "Boo!";
+    private static readonly string BOO_TOPIC = "Boo Topic!";
+
+    public RestConsumerRequestTest( RequestConsumerFixture fixture )
     {
-        this.fixture = fixture;
+        channel = fixture.RequestChannel;
+        provider = fixture.Provider;
+        consumer = fixture.Consumer;
     }
 
     [Fact]
     public async Task OpenAndCloseSession()
     {
-        var request = new RestConsumerRequest( fixture.Config );
-        var session = await request.OpenSession( fixture.RequestChannel );
+        RequestConsumerSession session = await consumer.OpenSession( channel.Uri );
 
-        Assert.NotNull( session );
+        await consumer.CloseSession( session.Id );
+    }
 
-        await request.CloseSession( session );
+    [Fact]
+    public async Task CantCloseSessionTwice()
+    {
+        RequestConsumerSession session = await consumer.OpenSession( channel.Uri);
+
+        await consumer.CloseSession(session.Id);
+
+        Task closeAgain() => consumer.CloseSession(session.Id);
+
+        await Assert.ThrowsAsync<ApiException>(closeAgain);
     }
 
     [Fact]
     public async Task PostRequest()
     {
-        var request = new RestConsumerRequest(fixture.Config);
-        var session = await request.OpenSession(fixture.RequestChannel);
+        RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
 
-        Assert.NotNull(session);
+        _ = await consumer.PostRequest( session.Id, BOO, BOO_TOPIC );
 
-        var message = await request.PostRequest( session, "Yo!", new[] { "yo" } );
+        await consumer.CloseSession( session.Id );
+    }
 
-        Assert.NotNull( message );
+    [Fact]
+    public async Task PostRequestReadResponse()
+    {
+        var providerSession = await provider.OpenSession(channel.Uri, BOO_TOPIC);
+        var consumerSession = await consumer.OpenSession(channel.Uri);
 
-        await request.CloseSession( session );
+        try
+        {
+            await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC);
+
+            var requestMessage = await provider.ReadRequest(providerSession.Id);
+            await provider.RemoveRequest( providerSession.Id );
+
+            Assert.IsType<MessageString>(requestMessage.MessageContent);
+
+            var requestContent = requestMessage.MessageContent.GetContent<string>();
+
+            Assert.True(requestContent == BOO);
+
+            var responseMessage = await provider.PostResponse(providerSession.Id, requestMessage.Id, "Carrots!");
+
+            Assert.NotNull( responseMessage );
+            Assert.Contains("Carrots", responseMessage.MessageContent.GetContent<string>());
+
+            var message = await consumer.ReadResponse( consumerSession.Id, requestMessage.Id );
+            await consumer.RemoveResponse( consumerSession.Id, requestMessage.Id );
+
+            Assert.IsType<MessageString>(message.MessageContent);
+
+            var content = message.MessageContent.GetContent<string>();
+
+            Assert.NotNull(content);
+            Assert.Contains("Carrots!", content);
+        }
+        finally
+        {
+            await consumer.CloseSession(consumerSession.Id);
+            await provider.CloseSession(providerSession.Id);
+        }
     }
 }

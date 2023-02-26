@@ -30,7 +30,7 @@ public class RestChannelManagement : IChannelManagement
         Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    "));
 
         var createdChannel = await _channelApi.CreateChannelAsync(toBeChannel);
-        var instance = Activator.CreateInstance(typeof(T), createdChannel.Uri, createdChannel.Description) as T;
+        var instance = Activator.CreateInstance(typeof(T), channelUri, createdChannel.Description) as T;
 
         if ( instance is null ) throw new Exception("Uh oh");
 
@@ -47,7 +47,7 @@ public class RestChannelManagement : IChannelManagement
         // TODO: error handling
         var channel = await _channelApi.GetChannelAsync(channelUri);
         var type = channel.ChannelType == RestModel.ChannelType.Publication ? typeof(PublicationChannel) : typeof(RequestChannel);
-        var instance = Activator.CreateInstance(type, channel.Uri, channel.Description) as Channel;
+        var instance = Activator.CreateInstance(type, channelUri, channel.Description) as Channel;
 
         if ( instance is null ) throw new Exception( "Uh oh" );
 
