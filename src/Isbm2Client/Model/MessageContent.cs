@@ -1,9 +1,8 @@
-﻿using Isbm2Client.Extensions;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Isbm2Client.Model;
 
-public abstract record class MessageContent( string Id )
+public abstract record class MessageContent
 {
     private readonly object instance = null!;
 
@@ -35,7 +34,7 @@ public abstract record class MessageContent( string Id )
         throw new InvalidOperationException( "Uh oh" );
     }
 
-    public MessageContent( string id, object instance ) : this(id)
+    public MessageContent( object instance )
     {
         if ( instance is not string && instance is not JsonDocument )
         {
@@ -45,5 +44,5 @@ public abstract record class MessageContent( string Id )
         this.instance = instance;
     }
 }
-public record class MessageString( string Id, string Content ) : MessageContent( Id, Content );
-public record class MessageJsonDocument(string Id, JsonDocument Content) : MessageContent(Id, Content);
+public record class MessageString( string Content ) : MessageContent( Content );
+public record class MessageJsonDocument( JsonDocument Content ) : MessageContent( Content );

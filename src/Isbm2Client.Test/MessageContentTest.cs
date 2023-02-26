@@ -1,7 +1,5 @@
-﻿using Isbm2Client.Extensions;
-using Isbm2Client.Model;
+﻿using Isbm2Client.Model;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace Isbm2Client.Test
 {
@@ -18,12 +16,10 @@ namespace Isbm2Client.Test
             }
         };
 
-        private readonly string id = Guid.NewGuid().ToString();
-
         [Fact]
         public void StringContent()
         {
-            var messageString = new MessageString( id, "fred");
+            var messageString = new MessageString("fred");
 
             var content = messageString.GetContent<string>();
 
@@ -34,7 +30,7 @@ namespace Isbm2Client.Test
         public void JsonDocumentContent()
         {
             var inputDocument = JsonSerializer.SerializeToDocument( complexObject );
-            var messageContent = new MessageJsonDocument(id, inputDocument);
+            var messageContent = new MessageJsonDocument(inputDocument);
 
             var document = messageContent.GetContent<JsonDocument>();
 
@@ -52,7 +48,7 @@ namespace Isbm2Client.Test
         public void ComplexContent()
         {
             var document = JsonSerializer.SerializeToDocument(complexObject);
-            var messageContent = new MessageJsonDocument(id, document);
+            var messageContent = new MessageJsonDocument(document);
 
             var content = messageContent.Deserialise<TestObject>();
 
@@ -63,7 +59,7 @@ namespace Isbm2Client.Test
         public void ComplexContentTheWrongWay()
         {
             var document = JsonSerializer.SerializeToDocument(complexObject);
-            var messageContent = new MessageJsonDocument(id, document);
+            var messageContent = new MessageJsonDocument(document);
 
             void wrongBet() => messageContent.GetContent<TestObject>();
 
@@ -74,7 +70,7 @@ namespace Isbm2Client.Test
         public void InvalidCast()
         {
             var document = JsonSerializer.SerializeToDocument(complexObject);
-            MessageJsonDocument messageContent = new(id, document);
+            MessageJsonDocument messageContent = new(document);
 
             void badCast() => messageContent.GetContent<string>();
 

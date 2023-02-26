@@ -5,7 +5,6 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
-using Isbm2Client.Extensions;
 using System.Text.Json;
 
 namespace Isbm2Client.Service
@@ -56,10 +55,10 @@ namespace Isbm2Client.Service
             MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
                 string x => 
-                    new MessageString( response.MessageId, x),
+                    new MessageString( x),
 
                 JsonDocument x => 
-                    new MessageJsonDocument( response.MessageId, x ),
+                    new MessageJsonDocument( x ),
 
                 _ => 
                     throw new Exception( "Uh oh" )
@@ -103,13 +102,13 @@ namespace Isbm2Client.Service
             Model.MessageContent messageContent = content switch
             {
                 string x => 
-                    new MessageString(message.MessageId, x),
+                    new MessageString(x),
 
                 JsonDocument x => 
-                    new MessageJsonDocument(message.MessageId, x),
+                    new MessageJsonDocument(x),
 
                 T x =>
-                    new MessageJsonDocument(message.MessageId, JsonSerializer.SerializeToDocument(x)),
+                    new MessageJsonDocument(JsonSerializer.SerializeToDocument(x)),
 
                 _ => 
                     throw new Exception("Uh oh")

@@ -7,7 +7,6 @@ using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 using Isbm2RestClient.Model;
 using System.Text.Json;
-using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service
 {
@@ -93,13 +92,13 @@ namespace Isbm2Client.Service
             Model.MessageContent messageContent = content switch
             {
                 string x => 
-                    new MessageString(message.MessageId, x),
+                    new MessageString(x),
 
                 JsonDocument x => 
-                    new MessageJsonDocument(message.MessageId, x),
+                    new MessageJsonDocument(x),
 
                 T x =>
-                    new MessageJsonDocument(message.MessageId, JsonSerializer.SerializeToDocument(x)),
+                    new MessageJsonDocument(JsonSerializer.SerializeToDocument(x)),
 
                 _ =>
                     throw new Exception("Uh oh")
@@ -115,10 +114,10 @@ namespace Isbm2Client.Service
             Model.MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
             {
                 string x =>
-                    new MessageString(response.MessageId, x),
+                    new MessageString(x),
 
                 JsonDocument x =>
-                    new MessageJsonDocument(response.MessageId, x),
+                    new MessageJsonDocument(x),
 
                 _ =>
                     throw new Exception("Uh oh")
