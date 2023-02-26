@@ -15,7 +15,7 @@ public abstract record class MessageContent( string Id )
         }
 
         if (instance is not T)
-            throw new InvalidCastException($"Instance is not of type: string");
+            throw new InvalidCastException($"Instance is not of type: {typeof(T).FullName}");
 
         return (T)instance;
     }
