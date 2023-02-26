@@ -45,7 +45,7 @@ namespace Isbm2Client.Service
 
             if ( session is null ) throw new Exception( "Uh oh" );
 
-            return new RequestProviderSession( session.SessionId, sessionParams.Topics.ToArray(), Array.Empty<string>() );
+            return new RequestProviderSession( session.SessionId, null, sessionParams.Topics.ToArray(), Array.Empty<string>() );
         }
 
         public async Task<RequestMessage> ReadRequest(string sessionId)
