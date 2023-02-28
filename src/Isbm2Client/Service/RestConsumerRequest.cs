@@ -7,92 +7,91 @@ using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
 
-namespace Isbm2Client.Service
+namespace Isbm2Client.Service;
+
+public class RestConsumerRequest : IConsumerRequest
 {
-    public class RestConsumerRequest : IConsumerRequest
+    private readonly RestApi.ConsumerRequestServiceApi _requestApi;
+
+    public RestConsumerRequest(IOptions<ClientConfig> options)
     {
-        private readonly RestApi.ConsumerRequestServiceApi _requestApi;
-
-        public RestConsumerRequest(IOptions<ClientConfig> options)
+        RestClient.Configuration apiConfig = new()
         {
-            RestClient.Configuration apiConfig = new()
-            {
-                BasePath = options.Value.EndPoint
-            };
+            BasePath = options.Value.EndPoint
+        };
 
-            // TODO: proper configuration
+        // TODO: proper configuration
 
-            _requestApi = new RestApi.ConsumerRequestServiceApi(apiConfig);
-        }
+        _requestApi = new RestApi.ConsumerRequestServiceApi(apiConfig);
+    }
 
-        public async Task<RequestConsumerSession> OpenSession( string channelUri )
+    public async Task<RequestConsumerSession> OpenSession( string channelUri )
+    {
+        var sessionParams = new RestModel.Session()
         {
-            var sessionParams = new RestModel.Session()
-            {
-                SessionType = RestModel.SessionType.RequestConsumer
-            };
+            SessionType = RestModel.SessionType.RequestConsumer
+        };
 
-            var session = await _requestApi.OpenConsumerRequestSessionAsync( channelUri, sessionParams );
+        var session = await _requestApi.OpenConsumerRequestSessionAsync( channelUri, sessionParams );
 
-            if ( session is null ) throw new Exception( "Uh oh" );
+        if ( session is null ) throw new Exception( "Uh oh" );
 
-            return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl );
-        }
+        return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl );
+    }
 
-        public async Task<RequestConsumerSession> OpenSession(string channelUri, string listenerUri)
+    public async Task<RequestConsumerSession> OpenSession(string channelUri, string listenerUri)
+    {
+        var sessionParams = new RestModel.Session()
         {
-            var sessionParams = new RestModel.Session()
-            {
-                SessionType = RestModel.SessionType.RequestConsumer,
-                ListenerUrl = listenerUri
-            };
+            SessionType = RestModel.SessionType.RequestConsumer,
+            ListenerUrl = listenerUri
+        };
 
-            var session = await _requestApi.OpenConsumerRequestSessionAsync(channelUri, sessionParams);
+        var session = await _requestApi.OpenConsumerRequestSessionAsync(channelUri, sessionParams);
 
-            if ( session is null ) throw new Exception("Uh oh");
+        if ( session is null ) throw new Exception("Uh oh");
 
-            return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl);
-        }
+        return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl);
+    }
 
-        public Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic ) where T : notnull
-        {
-            var topics = new[] { topic };
+    public Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic ) where T : notnull
+    {
+        var topics = new[] { topic };
 
-            return PostRequest( sessionId, content, topics );
-        }
+        return PostRequest( sessionId, content, topics );
+    }
 
-        public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics ) where T : notnull
-        {
-            var messageContent = Model.MessageContent.From(content);
+    public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics ) where T : notnull
+    {
+        var messageContent = Model.MessageContent.From(content);
 
-            var restMessage = new RestModel.Message
-            ( 
-                messageContent: messageContent.ToRestMessageContent(), 
-                topics: topics.ToList() 
-            );
+        var restMessage = new RestModel.Message
+        ( 
+            messageContent: messageContent.ToRestMessageContent(), 
+            topics: topics.ToList() 
+        );
 
-            var message = await _requestApi.PostRequestAsync( sessionId, restMessage );
+        var message = await _requestApi.PostRequestAsync( sessionId, restMessage );
 
-            return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
-        }
+        return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
+    }
 
-        public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
-        {
-            var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
-            var content = response.MessageContent.Content.ActualInstance;
-            var messageContent = Model.MessageContent.From( content );
+    public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
+    {
+        var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
+        var content = response.MessageContent.Content.ActualInstance;
+        var messageContent = Model.MessageContent.From( content );
 
-            return new ResponseMessage( response.MessageId, messageContent, Array.Empty<string>(), "");
-        }
+        return new ResponseMessage( response.MessageId, messageContent, Array.Empty<string>(), "");
+    }
 
-        public async Task RemoveResponse( string sessionId, string requestId )
-        {
-            await _requestApi.RemoveResponseAsync( sessionId, requestId );
-        }
+    public async Task RemoveResponse( string sessionId, string requestId )
+    {
+        await _requestApi.RemoveResponseAsync( sessionId, requestId );
+    }
 
-        public async Task CloseSession(string sessionId)
-        {
-            await _requestApi.CloseSessionAsync(sessionId);
-        }
+    public async Task CloseSession(string sessionId)
+    {
+        await _requestApi.CloseSessionAsync(sessionId);
     }
 }
