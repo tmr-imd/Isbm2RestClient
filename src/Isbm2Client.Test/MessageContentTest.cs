@@ -30,7 +30,7 @@ namespace Isbm2Client.Test
         public void JsonDocumentContent()
         {
             var inputDocument = JsonSerializer.SerializeToDocument( complexObject );
-            var messageContent = new MessageContent(inputDocument);
+            var messageContent = new MessageContent(inputDocument, "application/json");
 
             var document = messageContent.Content;
 

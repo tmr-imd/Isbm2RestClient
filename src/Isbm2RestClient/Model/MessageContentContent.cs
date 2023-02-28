@@ -297,18 +297,9 @@ namespace Isbm2RestClient.Model
 
                 case JsonToken.String:
                     return new MessageContentContent( (string)reader.Value );
-                    //return new MessageContentContent( System.Text.Json.JsonSerializer.SerializeToDocument($"'{(string)reader.Value}'") );
-                    //return System.Text.Json.JsonSerializer.Deserialize<JsonDocument>(String.Format("{0}{1}{0}",
-                    //        reader.QuoteChar, 
-                    //        ((string)reader.Value).Replace($"{reader.QuoteChar}", $"\\{reader.QuoteChar}")) );
-
-                    //return MessageContentContent.FromJson(String.Format("{0}{1}{0}", 
-                    //        reader.QuoteChar, 
-                    //        ((string)reader.Value).Replace($"{reader.QuoteChar}", $"\\{reader.QuoteChar}")));
 
                 case JsonToken.StartObject:
                     return MessageContentContent.FromJson(JObject.Load(reader).ToString(Formatting.None));
-                    //return System.Text.Json.JsonSerializer.SerializeToDocument( JObject.Load(reader).ToString(Formatting.None) );
 
                 default:
                     var jsonString = reader.Value.ToString();

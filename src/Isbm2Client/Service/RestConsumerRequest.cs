@@ -5,8 +5,7 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
-using Isbm2RestClient.Model;
-using System.Text.Json;
+using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service
 {
@@ -50,7 +49,7 @@ namespace Isbm2Client.Service
 
             var session = await _requestApi.OpenConsumerRequestSessionAsync(channelUri, sessionParams);
 
-            if (session is null) throw new Exception("Uh oh");
+            if ( session is null ) throw new Exception("Uh oh");
 
             return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl);
         }
@@ -64,40 +63,26 @@ namespace Isbm2Client.Service
 
         public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics ) where T : notnull
         {
-            var inputMessageContent = content switch
-            {
-                string x => 
-                    new RestModel.MessageContent("text/plain", content: new MessageContentContent(x)),
+            var messageContent = Model.MessageContent.From(content);
 
-                JsonDocument x => 
-                    new RestModel.MessageContent(
-                        "application/json", 
-                        content: new MessageContentContent(x)
-                    ),
+            var restMessage = new RestModel.Message
+            ( 
+                messageContent: messageContent.ToRestMessageContent(), 
+                topics: topics.ToList() 
+            );
 
-                T x =>
-                    new RestModel.MessageContent(
-                        "application/json",
-                        content: new MessageContentContent(JsonSerializer.SerializeToDocument(x))
-                    ),
+            var message = await _requestApi.PostRequestAsync( sessionId, restMessage );
 
-                _ => 
-                    throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
-            };
-
-            var inputMessage = new RestModel.Message( messageContent: inputMessageContent, topics: topics.ToList() );
-
-            var message = await _requestApi.PostRequestAsync( sessionId, inputMessage );
-
-            return new RequestMessage( message.MessageId, Model.MessageContent.From(content), topics.ToArray(), "" );
+            return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
         }
 
         public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
         {
             var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
             var content = response.MessageContent.Content.ActualInstance;
+            var messageContent = Model.MessageContent.From( content );
 
-            return new ResponseMessage( response.MessageId, Model.MessageContent.From(content), Array.Empty<string>(), "");
+            return new ResponseMessage( response.MessageId, messageContent, Array.Empty<string>(), "");
         }
 
         public async Task RemoveResponse( string sessionId, string requestId )

@@ -5,7 +5,7 @@ using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
+using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service
 {
@@ -53,8 +53,9 @@ namespace Isbm2Client.Service
             var response = await _requestApi.ReadRequestAsync( sessionId );
 
             var content = response.MessageContent.Content.ActualInstance;
+            var messageContent = MessageContent.From( content );
 
-            return new RequestMessage( response.MessageId, MessageContent.From(content), response.Topics.ToArray(), "" );
+            return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
         }
 
         public async Task RemoveRequest(string sessionId)
@@ -64,32 +65,13 @@ namespace Isbm2Client.Service
 
         public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
         {
-            var inputMessageContent = content switch
-            {
-                string x =>
-                    new RestModel.MessageContent("text/plain", content: new RestModel.MessageContentContent(x)),
+            var messageContent = MessageContent.From(content);
+            var restMessageContent = messageContent.ToRestMessageContent();
+            var restMessage = new RestModel.Message( messageContent: restMessageContent );
 
-                JsonDocument x =>
-                    new RestModel.MessageContent(
-                        "application/json", 
-                        content: new RestModel.MessageContentContent(x)
-                    ),
+            var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, restMessage );
 
-                T x =>
-                    new RestModel.MessageContent(
-                        "application/json",
-                        content: new RestModel.MessageContentContent(JsonSerializer.SerializeToDocument(x))
-                    ),
-
-                _ =>
-                    throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
-            };
-
-            var inputMessage = new RestModel.Message( messageContent: inputMessageContent );
-
-            var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, inputMessage );
-
-            return new ResponseMessage( message.MessageId, MessageContent.From(content), Array.Empty<string>(), "" );
+            return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
         }
 
         public async Task CloseSession( string sessionId )

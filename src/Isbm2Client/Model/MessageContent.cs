@@ -2,14 +2,20 @@
 
 namespace Isbm2Client.Model;
 
-public record class MessageContent( JsonDocument Content )
+public record class MessageContent( JsonDocument Content, string MediaType, string? ContentEncoding = null)
 {
     public static MessageContent From<T>( T content ) where T : notnull
     {
+        var mediaType = content switch
+        {
+            string => "text/plain",
+            _ => "application/json"
+        };
+
         return content switch
         {
-            JsonDocument x => new MessageContent(x),
-            T => new MessageContent(JsonSerializer.SerializeToDocument(content)),
+            JsonDocument document => new MessageContent(document, mediaType),
+            T x => new MessageContent(JsonSerializer.SerializeToDocument(x), mediaType),
             _ => throw new NotImplementedException()
         };
     }
@@ -25,7 +31,7 @@ public record class MessageContent( JsonDocument Content )
         var instance = JsonSerializer.Deserialize<T>( Content );
 
         if ( instance is null )
-            throw new InvalidCastException($"Could not deserialise JsonDocument to: {typeof(T).FullName}");
+            throw new InvalidCastException( $"Could not deserialise JsonDocument to: {typeof(T).FullName}" );
 
         return instance;
     }
