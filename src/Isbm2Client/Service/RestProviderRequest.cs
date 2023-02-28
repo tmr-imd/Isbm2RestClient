@@ -52,19 +52,9 @@ namespace Isbm2Client.Service
         {
             var response = await _requestApi.ReadRequestAsync( sessionId );
 
-            MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
-            {
-                string x => 
-                    new MessageString( x),
+            var content = response.MessageContent.Content.ActualInstance;
 
-                JsonDocument x => 
-                    new MessageJsonDocument( x ),
-
-                _ => 
-                    throw new Exception( "Uh oh" )
-            };
-
-            return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
+            return new RequestMessage( response.MessageId, MessageContent.From(content), response.Topics.ToArray(), "" );
         }
 
         public async Task RemoveRequest(string sessionId)
@@ -99,22 +89,7 @@ namespace Isbm2Client.Service
 
             var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, inputMessage );
 
-            Model.MessageContent messageContent = content switch
-            {
-                string x => 
-                    new MessageString(x),
-
-                JsonDocument x => 
-                    new MessageJsonDocument(x),
-
-                T x =>
-                    new MessageJsonDocument(JsonSerializer.SerializeToDocument(x)),
-
-                _ => 
-                    throw new Exception("Uh oh")
-            };
-
-            return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
+            return new ResponseMessage( message.MessageId, MessageContent.From(content), Array.Empty<string>(), "" );
         }
 
         public async Task CloseSession( string sessionId )

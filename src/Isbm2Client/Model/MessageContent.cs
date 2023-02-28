@@ -2,47 +2,31 @@
 
 namespace Isbm2Client.Model;
 
-public abstract record class MessageContent
+public record class MessageContent( JsonDocument Content )
 {
-    private readonly object instance = null!;
-
-    public T GetContent<T>()
+    public static MessageContent From<T>( T content ) where T : notnull
     {
-        if ( typeof(T) != typeof(string) && typeof(T) != typeof(JsonDocument) )
+        return content switch
         {
-            throw new ArgumentException("Requested type must be one of the following: string or JsonDocument");
-        }
-
-        if (instance is not T)
-            throw new InvalidCastException($"Instance is not of type: {typeof(T).FullName}");
-
-        return (T)instance;
+            JsonDocument x => new MessageContent(x),
+            T => new MessageContent(JsonSerializer.SerializeToDocument(content)),
+            _ => throw new NotImplementedException()
+        };
     }
 
-    public T Deserialise<T>() where T : class, new()
+    public T Deserialise<T>() where T : notnull
     {
-        if ( instance is JsonDocument document )
-        {
-            var typedObject = JsonSerializer.Deserialize<T>( document );
+        if ( Content.RootElement.ValueKind != JsonValueKind.Object && Content.RootElement.ValueKind != JsonValueKind.String )
+            throw new InvalidCastException("Root element for JsonDocument must either be a String or an Object");
 
-            if (typedObject is null)
-                throw new InvalidCastException($"Could not deserialise JsonDocument to: {typeof(T).Name}");
+        if ( typeof(T) == typeof(string) && Content.RootElement.ValueKind != JsonValueKind.String )
+            throw new InvalidCastException( $"Could not deserialise JsonDocument to: {typeof(T).FullName}" );
 
-            return typedObject;
-        }
+        var instance = JsonSerializer.Deserialize<T>( Content );
 
-        throw new InvalidOperationException( "Uh oh" );
-    }
+        if ( instance is null )
+            throw new InvalidCastException($"Could not deserialise JsonDocument to: {typeof(T).FullName}");
 
-    public MessageContent( object instance )
-    {
-        if ( instance is not string && instance is not JsonDocument )
-        {
-            throw new ArgumentException("Invalid instance found. Must be the following types: string or JsonDocument");
-        }
-
-        this.instance = instance;
+        return instance;
     }
 }
-public record class MessageString( string Content ) : MessageContent( Content );
-public record class MessageJsonDocument( JsonDocument Content ) : MessageContent( Content );

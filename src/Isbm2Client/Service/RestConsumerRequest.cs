@@ -89,41 +89,15 @@ namespace Isbm2Client.Service
 
             var message = await _requestApi.PostRequestAsync( sessionId, inputMessage );
 
-            Model.MessageContent messageContent = content switch
-            {
-                string x => 
-                    new MessageString(x),
-
-                JsonDocument x => 
-                    new MessageJsonDocument(x),
-
-                T x =>
-                    new MessageJsonDocument(JsonSerializer.SerializeToDocument(x)),
-
-                _ =>
-                    throw new Exception("Uh oh")
-            };
-
-            return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
+            return new RequestMessage( message.MessageId, Model.MessageContent.From(content), topics.ToArray(), "" );
         }
 
         public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
         {
             var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
+            var content = response.MessageContent.Content.ActualInstance;
 
-            Model.MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
-            {
-                string x =>
-                    new MessageString(x),
-
-                JsonDocument x =>
-                    new MessageJsonDocument(x),
-
-                _ =>
-                    throw new Exception("Uh oh")
-            };
-
-            return new ResponseMessage(response.MessageId, messageContent, Array.Empty<string>(), "");
+            return new ResponseMessage( response.MessageId, Model.MessageContent.From(content), Array.Empty<string>(), "");
         }
 
         public async Task RemoveResponse( string sessionId, string requestId )

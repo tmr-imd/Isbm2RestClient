@@ -55,9 +55,7 @@ public class RestProviderRequestTest
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageString>( message.MessageContent );
-
-            var content = message.MessageContent.GetContent<string>();
+            var content = message.MessageContent.Deserialise<string>();
 
             Assert.NotNull(content);
             Assert.Contains(YO, content);
@@ -90,9 +88,7 @@ public class RestProviderRequestTest
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageJsonDocument>( message.MessageContent );
-
-            var content = message.MessageContent.GetContent<JsonDocument>();
+            var content = message.MessageContent.Content;
 
             Assert.NotNull(content);
 
@@ -114,7 +110,7 @@ public class RestProviderRequestTest
 
         var inputContent = new TestObject()
         {
-            Numbers = new[] { 23, 45, 100 },
+            Numbers = new[] { 23.0, 45, 100 },
             Text = "Hello",
             Weather = new Dictionary<string, double>()
             {
@@ -129,8 +125,6 @@ public class RestProviderRequestTest
         {
             var message = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
-
-            Assert.IsType<MessageJsonDocument>(message.MessageContent);
 
             var content = message.MessageContent.Deserialise<TestObject>();
 
@@ -156,16 +150,14 @@ public class RestProviderRequestTest
             var requestMessage = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageString>(requestMessage.MessageContent);
-
-            var content = requestMessage.MessageContent.GetContent<string>();
+            var content = requestMessage.MessageContent.Deserialise<string>();
 
             Assert.True( content == YO );
 
             var message = await provider.PostResponse( providerSession.Id, requestMessage.Id, "Carrots!" );
 
             Assert.NotNull( message );
-            Assert.Contains( "Carrots", message.MessageContent.GetContent<string>() );
+            Assert.Contains( "Carrots", message.MessageContent.Deserialise<string>() );
         }
         finally
         {

@@ -7,7 +7,7 @@ namespace Isbm2Client.Test
     {
         private readonly TestObject complexObject = new()
         {
-            Numbers = new[] { 1, 2, 3, 4 },
+            Numbers = new[] { 1.0, 2, 3, 4 },
             Text = "Fred",
             Weather = new Dictionary<string, double>()
             {
@@ -19,9 +19,9 @@ namespace Isbm2Client.Test
         [Fact]
         public void StringContent()
         {
-            var messageString = new MessageString("fred");
+            var messageString = MessageContent.From("fred");
 
-            var content = messageString.GetContent<string>();
+            var content = messageString.Deserialise<string>();
 
             Assert.True( content == "fred");
         }
@@ -30,9 +30,9 @@ namespace Isbm2Client.Test
         public void JsonDocumentContent()
         {
             var inputDocument = JsonSerializer.SerializeToDocument( complexObject );
-            var messageContent = new MessageJsonDocument(inputDocument);
+            var messageContent = new MessageContent(inputDocument);
 
-            var document = messageContent.GetContent<JsonDocument>();
+            var document = messageContent.Content;
 
             Assert.NotNull( document );
 
@@ -47,8 +47,7 @@ namespace Isbm2Client.Test
         [Fact]
         public void ComplexContent()
         {
-            var document = JsonSerializer.SerializeToDocument(complexObject);
-            var messageContent = new MessageJsonDocument(document);
+            var messageContent = MessageContent.From(complexObject);
 
             var content = messageContent.Deserialise<TestObject>();
 
@@ -56,23 +55,11 @@ namespace Isbm2Client.Test
         }
 
         [Fact]
-        public void ComplexContentTheWrongWay()
-        {
-            var document = JsonSerializer.SerializeToDocument(complexObject);
-            var messageContent = new MessageJsonDocument(document);
-
-            void wrongBet() => messageContent.GetContent<TestObject>();
-
-            Assert.Throws<ArgumentException>(wrongBet);
-        }
-
-        [Fact]
         public void InvalidCast()
         {
-            var document = JsonSerializer.SerializeToDocument(complexObject);
-            MessageJsonDocument messageContent = new(document);
+            var messageContent = MessageContent.From(complexObject);
 
-            void badCast() => messageContent.GetContent<string>();
+            void badCast() => messageContent.Deserialise<string>();
 
             Assert.Throws<InvalidCastException>(badCast);
         }
