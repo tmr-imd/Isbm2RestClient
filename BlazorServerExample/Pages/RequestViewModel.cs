@@ -4,6 +4,7 @@ using Isbm2Client.Model;
 using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace BlazorServerExample.Pages;
@@ -45,10 +46,7 @@ public class RequestViewModel : IAsyncDisposable
         this.service = service;
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        await Teardown();
-    }
+    public async ValueTask DisposeAsync() => await Teardown();
 
     public async Task Setup()
     {
@@ -90,20 +88,9 @@ public class RequestViewModel : IAsyncDisposable
 
     public async Task<string> Request()
     {
-        var payload = new Dictionary<string, string>()
-        {
-            { "FilterCode", FilterCode },
-            { "FilterType", FilterType },
-            { "FilterLocation", FilterLocation },
-            { "FilterOwner", FilterOwner },
-            { "FilterCondition", FilterCondition },
-            { "FilterInspector", FilterInspector },
+        var requestFilter = new StructureAssetsFilter( FilterCode, FilterType, FilterLocation, FilterOwner, FilterCondition, FilterInspector );
 
-        };
-
-        var json = JsonSerializer.Serialize( payload );
-
-        var request = await consumer.PostRequest( consumerSession.Id, json, Topic );
+        var request = await consumer.PostRequest( consumerSession.Id, requestFilter, Topic );
 
         return request.Id;
     }
@@ -113,26 +100,11 @@ public class RequestViewModel : IAsyncDisposable
         var requestMessage = await provider.ReadRequest(providerSession.Id);
         await provider.RemoveRequest(providerSession.Id);
 
-        var json = requestMessage.MessageContent.GetContent<string>();
+        StructureAssetsFilter requestFilter = requestMessage.MessageContent.Deserialise<StructureAssetsFilter>();
 
-        var content = JsonSerializer.Deserialize<Dictionary<string, string>>( json );
+        var structures = service.GetStructures( requestFilter );
 
-        if ( content is not null )
-        {
-            var filterCode = (string)content["FilterCode"] ?? "";
-            var filterType = (string)content["FilterType"] ?? "";
-            var filterLocation = (string)content["FilterLocation"] ?? "";
-            var filterOwner = (string)content["FilterOwner"] ?? "";
-            var filterCondition = (string)content["FilterCondition"] ?? "";
-            var filterInspector = (string)content["FilterInspector"] ?? "";
-
-            var payload = new Dictionary<string, object>()
-            {
-                { "Structures", service.GetStructures(filterCode, filterType, filterLocation, filterOwner, filterCondition, filterInspector) }
-            };
-
-            _ = await provider.PostResponse(providerSession.Id, requestMessage.Id, payload);
-        }
+        _ = await provider.PostResponse(providerSession.Id, requestMessage.Id, new RequestStructures(structures) );
     }
 
     public async Task<IEnumerable<StructureAsset>> ReadResponse( string requestId )
@@ -140,13 +112,10 @@ public class RequestViewModel : IAsyncDisposable
         var message = await consumer.ReadResponse( consumerSession.Id, requestId );
         await consumer.RemoveResponse( consumerSession.Id, requestId );
 
-        var content = message.MessageContent.GetContent<Dictionary<string, object>>();
+        var payload = message.MessageContent.Deserialise<RequestStructures>();
 
-        var jsonArray = (JArray)content["Structures"];
-        var structures = jsonArray.ToObject<List<StructureAsset>>();
-
-        if (structures is not null)
-            return structures;
+        if ( payload is not null)
+            return payload.StructureAssets;
         
         return Enumerable.Empty<StructureAsset>();
     }

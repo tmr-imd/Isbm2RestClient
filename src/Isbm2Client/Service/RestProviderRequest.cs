@@ -58,11 +58,6 @@ public class RestProviderRequest : IProviderRequest
         return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
     }
 
-        public async Task RemoveRequest(string sessionId)
-        {
-            await _requestApi.RemoveRequestAsync( sessionId );
-        }
-
     public async Task RemoveRequest(string sessionId)
     {
         await _requestApi.RemoveRequestAsync( sessionId );

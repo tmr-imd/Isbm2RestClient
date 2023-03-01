@@ -12,12 +12,19 @@ public record class MessageContent( JsonDocument Content, string MediaType, stri
             _ => "application/json"
         };
 
-        return content switch
+        var messageContent = content switch
         {
-            JsonDocument document => new MessageContent(document, mediaType),
+            JsonDocument x => new MessageContent(x, mediaType),
             T x => new MessageContent(JsonSerializer.SerializeToDocument(x), mediaType),
             _ => throw new NotImplementedException()
         };
+
+        var document = messageContent.Content;
+
+        if ( document.RootElement.ValueKind != JsonValueKind.Object && document.RootElement.ValueKind != JsonValueKind.String )
+            throw new InvalidCastException("Root element for JsonDocument must either be a String or an Object");
+
+        return messageContent;
     }
 
     public T Deserialise<T>() where T : notnull

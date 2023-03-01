@@ -3,36 +3,35 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System.Globalization;
 using System.Reflection;
 
-namespace BlazorServerExample.Data
+namespace BlazorServerExample.Data;
+
+public class StructureAssetService
 {
-    public class StructureAssetService
+    public StructureAsset[] GetStructures( StructureAssetsFilter filter )
     {
-        public StructureAsset[] GetStructures(string filterCode, string filterType, string filterLocation, string filterOwner, string filterCondition, string filterInspector)
-        {
-            using var reader = new StreamReader( "./Data/Structure Assets.csv" );
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        using var reader = new StreamReader( "./Data/Structure Assets.csv" );
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-            var records = csv.GetRecords<StructureAsset>();
+        var records = csv.GetRecords<StructureAsset>();
 
-            if ( filterCode != "" )
-                records = records.Where( x => x.Code.ToLower().Contains(filterCode.ToLower()) );
+        if ( filter.FilterCode != "" )
+            records = records.Where( x => x.Code.ToLower().Contains(filter.FilterCode.ToLower()) );
 
-            if (filterType != "")
-                records = records.Where(x => x.Type.ToLower().Contains(filterType.ToLower()));
+        if (filter.FilterType != "")
+            records = records.Where(x => x.Type.ToLower().Contains(filter.FilterType.ToLower()));
 
-            if (filterLocation != "")
-                records = records.Where(x => x.Location.ToLower().Contains(filterLocation.ToLower()));
+        if (filter.FilterLocation != "")
+            records = records.Where(x => x.Location.ToLower().Contains(filter.FilterLocation.ToLower()));
 
-            if (filterOwner != "")
-                records = records.Where(x => x.Owner.ToLower().Contains(filterOwner.ToLower()));
+        if (filter.FilterOwner != "")
+            records = records.Where(x => x.Owner.ToLower().Contains(filter.FilterOwner.ToLower()));
 
-            if (filterCondition != "")
-                records = records.Where(x => x.Condition.ToLower().Contains(filterCondition.ToLower()));
+        if (filter.FilterCondition != "")
+            records = records.Where(x => x.Condition.ToLower().Contains(filter.FilterCondition.ToLower()));
 
-            if (filterInspector != "")
-                records = records.Where(x => x.Inspector.ToLower().Contains(filterInspector.ToLower()));
+        if (filter.FilterInspector != "")
+            records = records.Where(x => x.Inspector.ToLower().Contains(filter.FilterInspector.ToLower()));
 
-            return records.ToArray();
-        }
+        return records.ToArray();
     }
 }
