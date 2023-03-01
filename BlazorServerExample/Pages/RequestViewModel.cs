@@ -118,9 +118,6 @@ public class RequestViewModel : IAsyncDisposable
 
         var payload = message.MessageContent.Deserialise<RequestStructures>();
 
-        if ( payload is not null)
-            return payload.StructureAssets;
-        
-        return Enumerable.Empty<StructureAsset>();
+        return payload.StructureAssets;
     }
 }
