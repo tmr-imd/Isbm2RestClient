@@ -131,9 +131,7 @@
 
         try
         {
-            viewModel.StructureAssets = Enumerable.Empty<StructureAsset>();
-
-            StateHasChanged();
+            Clear();
 
             // Process the form
             await viewModel.Process();
@@ -151,7 +149,7 @@
 
     private void Clear()
     {
-        viewModel.StructureAssets = Enumerable.Empty<StructureAsset>();
+        viewModel.Clear();
 
         StateHasChanged();
     }

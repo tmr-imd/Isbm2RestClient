@@ -77,6 +77,11 @@ public class RequestViewModel : IAsyncDisposable
         if ( requestChannel != null ) await channelManagement.DeleteChannel( requestChannel.Uri );
     }
 
+    public void Clear()
+    {
+        StructureAssets = Enumerable.Empty<StructureAsset>();
+    }
+
     public async Task Process()
     {
         var requestId = await Request();
@@ -100,8 +105,7 @@ public class RequestViewModel : IAsyncDisposable
         var requestMessage = await provider.ReadRequest(providerSession.Id);
         await provider.RemoveRequest(providerSession.Id);
 
-        StructureAssetsFilter requestFilter = requestMessage.MessageContent.Deserialise<StructureAssetsFilter>();
-
+        var requestFilter = requestMessage.MessageContent.Deserialise<StructureAssetsFilter>();
         var structures = service.GetStructures( requestFilter );
 
         _ = await provider.PostResponse(providerSession.Id, requestMessage.Id, new RequestStructures(structures) );
