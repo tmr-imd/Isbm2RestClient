@@ -64,23 +64,19 @@ public class RestConsumerRequestTest
             var requestMessage = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageString>(requestMessage.MessageContent);
-
-            var requestContent = requestMessage.MessageContent.GetContent<string>();
+            var requestContent = requestMessage.MessageContent.Deserialise<string>();
 
             Assert.True(requestContent == BOO);
 
             var responseMessage = await provider.PostResponse(providerSession.Id, requestMessage.Id, "Carrots!");
 
             Assert.NotNull( responseMessage );
-            Assert.Contains("Carrots", responseMessage.MessageContent.GetContent<string>());
+            Assert.Contains("Carrots", responseMessage.MessageContent.Deserialise<string>());
 
             var message = await consumer.ReadResponse( consumerSession.Id, requestMessage.Id );
             await consumer.RemoveResponse( consumerSession.Id, requestMessage.Id );
 
-            Assert.IsType<MessageString>(message.MessageContent);
-
-            var content = message.MessageContent.GetContent<string>();
+            var content = message.MessageContent.Deserialise<string>();
 
             Assert.NotNull(content);
             Assert.Contains("Carrots!", content);

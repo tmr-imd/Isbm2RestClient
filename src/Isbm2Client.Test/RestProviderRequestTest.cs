@@ -55,9 +55,7 @@ public class RestProviderRequestTest
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageString>( message.MessageContent );
-
-            var content = message.MessageContent.GetContent<string>();
+            var content = message.MessageContent.Deserialise<string>();
 
             Assert.NotNull(content);
             Assert.Contains(YO, content);
@@ -70,7 +68,7 @@ public class RestProviderRequestTest
     }
 
     [Fact]
-    public async Task ReadDictionaryRequest()
+    public async Task ReadJsonDocumentRequest()
     {
         var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC);
         var consumerSession = await consumer.OpenSession( channel.Uri );
@@ -81,21 +79,21 @@ public class RestProviderRequestTest
             { "wilma", "betty" }
         };
 
-        await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
+        var document = JsonSerializer.SerializeToDocument( inputContent );
+
+        await consumer.PostRequest(consumerSession.Id, document, YO_TOPIC);
 
         try
         {
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageDictionary>( message.MessageContent );
-
-            var content = message.MessageContent.GetContent<Dictionary<string, object>>();
+            var content = message.MessageContent.Content;
 
             Assert.NotNull(content);
 
             if ( content is not null )
-                Assert.Contains("barney", (string)content["fred"]);
+                Assert.Contains( "barney", content.RootElement.GetProperty("fred").GetString() );
         }
         finally
         {
@@ -112,7 +110,7 @@ public class RestProviderRequestTest
 
         var inputContent = new TestObject()
         {
-            Numbers = new[] { 23, 45, 100 },
+            Numbers = new[] { 23.0, 45, 100 },
             Text = "Hello",
             Weather = new Dictionary<string, double>()
             {
@@ -121,14 +119,12 @@ public class RestProviderRequestTest
             }
         };
 
-        await consumer.PostRequest<TestObject>(consumerSession.Id, inputContent, YO_TOPIC);
+        await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
 
         try
         {
             var message = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
-
-            Assert.IsType<MessageDictionary>(message.MessageContent);
 
             var content = message.MessageContent.Deserialise<TestObject>();
 
@@ -154,16 +150,14 @@ public class RestProviderRequestTest
             var requestMessage = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            Assert.IsType<MessageString>(requestMessage.MessageContent);
-
-            var content = requestMessage.MessageContent.GetContent<string>();
+            var content = requestMessage.MessageContent.Deserialise<string>();
 
             Assert.True( content == YO );
 
             var message = await provider.PostResponse( providerSession.Id, requestMessage.Id, "Carrots!" );
 
             Assert.NotNull( message );
-            Assert.Contains( "Carrots", message.MessageContent.GetContent<string>() );
+            Assert.Contains( "Carrots", message.MessageContent.Deserialise<string>() );
         }
         finally
         {

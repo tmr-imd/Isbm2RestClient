@@ -1,5 +1,4 @@
-﻿using Isbm2Client.Extensions;
-using Isbm2Client.Model;
+﻿using Isbm2Client.Model;
 using System.Text.Json;
 
 namespace Isbm2Client.Test
@@ -8,7 +7,7 @@ namespace Isbm2Client.Test
     {
         private readonly TestObject complexObject = new()
         {
-            Numbers = new[] { 1, 2, 3, 4 },
+            Numbers = new[] { 1.0, 2, 3, 4 },
             Text = "Fred",
             Weather = new Dictionary<string, double>()
             {
@@ -17,62 +16,50 @@ namespace Isbm2Client.Test
             }
         };
 
-        private readonly string id = Guid.NewGuid().ToString();
-
         [Fact]
         public void StringContent()
         {
-            var messageString = new MessageString( id, "fred");
+            var messageString = MessageContent.From("fred");
 
-            var content = messageString.GetContent<string>();
+            var content = messageString.Deserialise<string>();
 
             Assert.True( content == "fred");
         }
 
         [Fact]
-        public void DictionaryContent()
+        public void JsonDocumentContent()
         {
-            var dictionary = ObjectExtensions.AsDictionary(complexObject);
-            var messageContent = new MessageDictionary(id, dictionary);
+            var inputDocument = JsonSerializer.SerializeToDocument( complexObject );
+            var messageContent = new MessageContent(inputDocument, "application/json");
 
-            var content = messageContent.GetContent<Dictionary<string, object>>();
+            var document = messageContent.Content;
 
-            Assert.IsType<Dictionary<string, double>>( content["Weather"] );
+            Assert.NotNull( document );
 
-            var subContent = (Dictionary<string, double>)content["Weather"];
+            if ( document is not null )
+            {
+                var weather = document.RootElement.GetProperty("Weather");
 
-            Assert.True(subContent["Devonport"] == 12.6);
+                Assert.True(weather.GetProperty("Devonport").GetDouble() == 12.6);
+            }
         }
 
         [Fact]
         public void ComplexContent()
         {
-            var dictionary = ObjectExtensions.AsDictionary( complexObject );
-            var messageContent = new MessageDictionary(id, dictionary);
+            var messageContent = MessageContent.From(complexObject);
 
             var content = messageContent.Deserialise<TestObject>();
 
-            Assert.True( content.Weather["Devonport"] == 12.6 );
-        }
-
-        [Fact]
-        public void ComplexContentTheWrongWay()
-        {
-            var dictionary = ObjectExtensions.AsDictionary(complexObject);
-            var messageContent = new MessageDictionary(id, dictionary);
-
-            void wrongBet() => messageContent.GetContent<TestObject>();
-
-            Assert.Throws<ArgumentException>( wrongBet );
+            Assert.True(content.Weather["Devonport"] == 12.6);
         }
 
         [Fact]
         public void InvalidCast()
         {
-            var dictionary = ObjectExtensions.AsDictionary(complexObject);
-            MessageDictionary messageContent = new(id, dictionary);
+            var messageContent = MessageContent.From(complexObject);
 
-            void badCast() => messageContent.GetContent<string>();
+            void badCast() => messageContent.Deserialise<string>();
 
             Assert.Throws<InvalidCastException>(badCast);
         }

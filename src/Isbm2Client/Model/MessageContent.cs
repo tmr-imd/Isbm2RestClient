@@ -1,44 +1,38 @@
-﻿using Isbm2Client.Extensions;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Isbm2Client.Model;
 
-public abstract record class MessageContent( string Id )
+public record class MessageContent( JsonDocument Content, string MediaType, string? ContentEncoding = null)
 {
-    private readonly object instance = null!;
-
-    public T GetContent<T>()
+    public static MessageContent From<T>( T content ) where T : notnull
     {
-        if ( typeof(T) != typeof(string) && typeof(T) != typeof(Dictionary<string, object>) )
+        var mediaType = content switch
         {
-            throw new ArgumentException("Requested type must be one of the following: string or Dictionary<string, object>");
-        }
+            string => "text/plain",
+            _ => "application/json"
+        };
 
-        if (instance is not T)
-            throw new InvalidCastException($"Instance is not of type: {typeof(T).FullName}");
-
-        return (T)instance;
+        return content switch
+        {
+            JsonDocument document => new MessageContent(document, mediaType),
+            T x => new MessageContent(JsonSerializer.SerializeToDocument(x), mediaType),
+            _ => throw new NotImplementedException()
+        };
     }
 
-    public T Deserialise<T>() where T : class, new()
+    public T Deserialise<T>() where T : notnull
     {
-        if ( instance is Dictionary<string, object> dictionary )
-        {
-            return ObjectExtensions.ToObject<T>( dictionary );
-        }
+        if ( Content.RootElement.ValueKind != JsonValueKind.Object && Content.RootElement.ValueKind != JsonValueKind.String )
+            throw new InvalidCastException("Root element for JsonDocument must either be a String or an Object");
 
-        throw new InvalidOperationException( "Uh oh" );
-    }
+        if ( typeof(T) == typeof(string) && Content.RootElement.ValueKind != JsonValueKind.String )
+            throw new InvalidCastException( $"Could not deserialise JsonDocument to: {typeof(T).FullName}" );
 
-    public MessageContent( string id, object instance ) : this(id)
-    {
-        if ( instance is not string && instance is not Dictionary<string, object> )
-        {
-            throw new ArgumentException("Invalid instance found. Must be the following types: string or Dictionary<string, object>");
-        }
+        var instance = JsonSerializer.Deserialize<T>( Content );
 
-        this.instance = instance;
+        if ( instance is null )
+            throw new InvalidCastException( $"Could not deserialise JsonDocument to: {typeof(T).FullName}" );
+
+        return instance;
     }
 }
-public record class MessageString( string Id, string Content ) : MessageContent( Id, Content );
-public record class MessageDictionary(string Id, Dictionary<string, object> Content) : MessageContent(Id, Content);

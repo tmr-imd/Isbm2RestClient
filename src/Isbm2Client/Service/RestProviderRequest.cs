@@ -7,119 +7,75 @@ using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
 
-namespace Isbm2Client.Service
+namespace Isbm2Client.Service;
+
+public class RestProviderRequest : IProviderRequest
 {
-    public class RestProviderRequest : IProviderRequest
+    private readonly RestApi.ProviderRequestServiceApi _requestApi;
+
+    public RestProviderRequest(IOptions<ClientConfig> options)
     {
-        private readonly RestApi.ProviderRequestServiceApi _requestApi;
-
-        public RestProviderRequest(IOptions<ClientConfig> options)
+        RestClient.Configuration apiConfig = new()
         {
-            RestClient.Configuration apiConfig = new()
-            {
-                BasePath = options.Value.EndPoint
-            };
+            BasePath = options.Value.EndPoint
+        };
 
-            // TODO: proper configuration
+        // TODO: proper configuration
 
-            _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
-        }
+        _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
+    }
 
-        public Task<RequestProviderSession> OpenSession(string channelUrl, string topic)
+    public Task<RequestProviderSession> OpenSession(string channelUrl, string topic)
+    {
+        var topics = new[] { topic };
+
+        return OpenSession( channelUrl, topics );
+    }
+
+    public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics) 
+    {
+        var sessionParams = new RestModel.Session()
         {
-            var topics = new[] { topic };
+            SessionType = RestModel.SessionType.RequestProvider,
+            Topics = topics.ToList(),
+            FilterExpressions = new List<RestModel.FilterExpression>()
+        };
 
-            return OpenSession( channelUrl, topics );
-        }
+        var session = await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams );
 
-        public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics) 
-        {
-            var sessionParams = new RestModel.Session()
-            {
-                SessionType = RestModel.SessionType.RequestProvider,
-                Topics = topics.ToList(),
-                FilterExpressions = new List<RestModel.FilterExpression>()
-            };
+        if ( session is null ) throw new Exception( "Uh oh" );
 
-            var session = await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams );
+        return new RequestProviderSession( session.SessionId, null, sessionParams.Topics.ToArray(), Array.Empty<string>() );
+    }
 
-            if ( session is null ) throw new Exception( "Uh oh" );
+    public async Task<RequestMessage> ReadRequest(string sessionId)
+    {
+        var response = await _requestApi.ReadRequestAsync( sessionId );
 
-            return new RequestProviderSession( session.SessionId, null, sessionParams.Topics.ToArray(), Array.Empty<string>() );
-        }
+        var content = response.MessageContent.Content.ActualInstance;
+        var messageContent = MessageContent.From( content );
 
-        public async Task<RequestMessage> ReadRequest(string sessionId)
-        {
-            var response = await _requestApi.ReadRequestAsync( sessionId );
+        return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
+    }
 
-            MessageContent messageContent = response.MessageContent.Content.ActualInstance switch
-            {
-                string x => 
-                    new MessageString( response.MessageId, x),
+    public async Task RemoveRequest(string sessionId)
+    {
+        await _requestApi.RemoveRequestAsync( sessionId );
+    }
 
-                Dictionary<string, object> x => 
-                    new MessageDictionary( response.MessageId, x ),
+    public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
+    {
+        var messageContent = MessageContent.From(content);
+        var restMessageContent = messageContent.ToRestMessageContent();
+        var restMessage = new RestModel.Message( messageContent: restMessageContent );
 
-                _ => 
-                    throw new Exception( "Uh oh" )
-            };
+        var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, restMessage );
 
-            return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
-        }
+        return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
+    }
 
-        public async Task RemoveRequest(string sessionId)
-        {
-            await _requestApi.RemoveRequestAsync( sessionId );
-        }
-
-        public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
-        {
-            var inputMessageContent = content switch
-            {
-                string x =>
-                    new RestModel.MessageContent("text/plain", content: new RestModel.MessageContentContent(x)),
-
-                Dictionary<string, object> x =>
-                    new RestModel.MessageContent(
-                        "application/json", 
-                        content: new RestModel.MessageContentContent(x)
-                    ),
-
-                T x =>
-                    new RestModel.MessageContent(
-                        "application/json",
-                        content: new RestModel.MessageContentContent(ObjectExtensions.AsDictionary(x))
-                    ),
-
-                _ =>
-                    throw new ArgumentException("Invalid content found. Must be the following types: Dictionary<string, object>, string")
-            };
-
-            var inputMessage = new RestModel.Message( messageContent: inputMessageContent );
-
-            var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, inputMessage );
-
-            Model.MessageContent messageContent = content switch
-            {
-                string x => 
-                    new MessageString(message.MessageId, x),
-
-                Dictionary<string, object> x => 
-                    new MessageDictionary(message.MessageId, x),
-
-                T x =>
-                    new MessageDictionary(message.MessageId, ObjectExtensions.AsDictionary(x)),
-
-                _ => 
-                    throw new Exception("Uh oh")
-            };
-
-            return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
-        }
-
-        public async Task CloseSession( string sessionId )
-        {
-            await _requestApi.CloseSessionAsync( sessionId );
-        }
+    public async Task CloseSession( string sessionId )
+    {
+        await _requestApi.CloseSessionAsync( sessionId );
     }
 }

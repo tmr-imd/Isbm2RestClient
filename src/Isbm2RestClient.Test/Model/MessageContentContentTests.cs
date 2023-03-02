@@ -32,7 +32,6 @@ namespace Isbm2RestClient.Test.Model
     /// </remarks>
     public class MessageContentContentTests : IDisposable
     {
-        // TODO uncomment below to declare an instance variable for MessageContentContent
         //private MessageContentContent instance;
 
         public MessageContentContentTests()
@@ -56,8 +55,47 @@ namespace Isbm2RestClient.Test.Model
             //Assert.IsType<MessageContentContent>(instance);
         }
 
+        [Fact]
+        public void JsonDocumentIsSerialisedCorrectly()
+        {
+            var testObject = new
+            {
+                Name = "Test",
+                Description = "Yo!",
+                Items = new[]
+                {
+                    new { subName = "Fred"}
+                }
+            };
 
+            var document = System.Text.Json.JsonSerializer.SerializeToDocument( testObject );
 
+            var messageContent = new MessageContentContent( document );
+            var json = messageContent.ToJson();
+
+            Assert.DoesNotContain( @"\""", json );
+        }
+
+        [Fact]
+        public void JsonDocumentIsDeserialisedCorrectly()
+        {
+            var testObject = new
+            {
+                Name = "Test",
+                Description = "Yo!",
+                Items = new[]
+                {
+                    new { subName = "Fred"}
+                }
+            };
+
+            var jsonString = System.Text.Json.JsonSerializer.Serialize(testObject);
+
+            var messageContent = MessageContentContent.FromJson( jsonString );
+
+            var document = messageContent.GetJsonDocument();
+
+            Assert.True( document.RootElement.GetProperty("Name").GetString() == "Test" );
+        }
     }
-
 }
