@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2Client.Test", "src\Isb
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorServerExample", "BlazorServerExample\BlazorServerExample.csproj", "{569474FA-2B92-45F1-A9AA-E6F6AB6F7EEA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D537A6AA-1F0C-4EB3-BC47-2C80C0EEACDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IsbmClientExample", "src\IsbmClientExample\IsbmClientExample.csproj", "{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,11 +43,18 @@ Global
 		{569474FA-2B92-45F1-A9AA-E6F6AB6F7EEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{569474FA-2B92-45F1-A9AA-E6F6AB6F7EEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{569474FA-2B92-45F1-A9AA-E6F6AB6F7EEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E09186B9-BE40-485C-B8C6-F545F18295E2}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA} = {D537A6AA-1F0C-4EB3-BC47-2C80C0EEACDC}
 	EndGlobalSection
 EndGlobal
