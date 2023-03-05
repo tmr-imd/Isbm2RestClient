@@ -39,7 +39,7 @@
         },
         {
             "type": "docker-build",
-            "label": "docker-build: debug",
+            "label": "docker-build-cli: debug",
             "dependsOn": [
                 "build"
             ],
@@ -56,7 +56,7 @@
         },
         {
             "type": "docker-build",
-            "label": "docker-build: release",
+            "label": "docker-build-cli: release",
             "dependsOn": [
                 "build"
             ],
@@ -84,9 +84,9 @@
         },
         {
             "type": "docker-run",
-            "label": "docker-run: release",
+            "label": "docker-run-cli: release",
             "dependsOn": [
-                "docker-build: release"
+                "docker-build-cli: release"
             ],
             "dockerRun": {},
             "netCore": {

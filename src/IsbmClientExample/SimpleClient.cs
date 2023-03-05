@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using CommonMessageContent = Isbm2Client.Model.MessageContent;
+using Isbm2Client.Extensions;
 using Isbm2RestClient.Api;
 using Isbm2RestClient.Client;
 using Isbm2RestClient.Model;
@@ -54,32 +56,20 @@ class SimpleClient {
         return session;
     }
 
-    public Message PostPublication(string sessionId, object content, IEnumerable<string> topics, string expiry = default(string)) {
-        if (!content.GetType().IsAssignableTo(typeof(string)) && !content.GetType().IsAssignableTo(typeof(Dictionary<string, object>)) && content.GetType().GetMethod("ToJson") == null) {
-            throw new ArgumentException("Message content must be a string, a Dictionary<string, object>, or an object that can be serialised to JSON using .ToJson()");
-        }
+    public Message PostPublication<T>(string sessionId, T content, IEnumerable<string> topics, string? expiry = default(string)) where T : notnull {
+        try {
+            MessageContent messageContent = CommonMessageContent.From(content).ToRestMessageContent();
 
-        MessageContent messageContent;
-        if (typeof(string).IsAssignableFrom(content.GetType())) {
-            string mediaType = "text/plain";
-            messageContent = new MessageContent(mediaType: mediaType, content: new MessageContentContent((string)content));
-        }
-        else if (typeof(Dictionary<string, object>).IsAssignableFrom(content.GetType())) {
-            string mediaType = "application/json";
-            messageContent = new MessageContent(mediaType: mediaType, content: new MessageContentContent((Dictionary<string, object>)content));
-        }
-        else {
-            string mediaType = "application/json";
-            var contentDict = JsonConvert.DeserializeObject<Dictionary<string, object>>((string)content.GetType().GetMethod("ToJson").Invoke(content, null));
-            messageContent = new MessageContent(mediaType: mediaType, content: new MessageContentContent(contentDict));
-        }
+            var publicationParams = new Message(messageContent: messageContent, topics: new List<string>(topics), expiry: expiry, messageType: MessageType.Publication);
+            Console.WriteLine("\nPosting publication:\n    {0}", publicationParams.ToJson().ReplaceLineEndings("\n    "));
 
-        var publicationParams = new Message(messageContent: messageContent, topics: new List<string>(topics), expiry: expiry, messageType: MessageType.Publication);
-        Console.WriteLine("\nPosting publication:\n    {0}", publicationParams.ToJson().ReplaceLineEndings("\n    "));
-
-        var publication = _publisherApi.PostPublication(sessionId, publicationParams);
-        publicationParams.MessageId = publication.MessageId;
-        return publicationParams;
+            var publication = _publisherApi.PostPublication(sessionId, publicationParams);
+            publicationParams.MessageId = publication.MessageId;
+            return publicationParams;
+        }
+        catch (Exception e) when (e switch { NotImplementedException => true, InvalidCastException => true, System.NotSupportedException => true, _ => false }) {
+            throw new ArgumentException("Message content must be a string, a JSONDocument, or an object that can be serialised to JSON using System.Text.Json.JsonSerializer.SerializeToDocument");
+        }
     }
 
     public Message? ReadPublication(string sessionId) {
