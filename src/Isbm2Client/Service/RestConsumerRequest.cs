@@ -82,7 +82,7 @@ public class RestConsumerRequest : IConsumerRequest
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = Model.MessageContent.From( content );
 
-        return new ResponseMessage( response.MessageId, messageContent, Array.Empty<string>(), "");
+        return new ResponseMessage( response.MessageId, messageContent, response.RequestMessageId ?? requestMessageId );
     }
 
     public async Task RemoveResponse( string sessionId, string requestId )

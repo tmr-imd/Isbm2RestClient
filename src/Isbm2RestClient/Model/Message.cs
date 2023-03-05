@@ -47,7 +47,7 @@ namespace Isbm2RestClient.Model
         /// <param name="topics">The Topic(s) to which the message will be posted..</param>
         /// <param name="expiry">The duration after which the message will be automatically expired. Negative duration is no duration. Duration as defined by XML Schema xs:duration, http://w3c.org/TR/xmlschema-2/#duration.</param>
         /// <param name="requestMessageId">Only valid for Response messages; refers to the original Request message..</param>
-        public Message(string messageId = default(string), MessageType? messageType = default(MessageType?), MessageContent messageContent = default(MessageContent), List<string> topics = default(List<string>), string expiry = default(string), string requestMessageId = default(string))
+        public Message(string messageId = default(string), MessageType? messageType = default(MessageType?), MessageContent messageContent = default(MessageContent), List<string> topics = default(List<string>), string? expiry = default(string), string? requestMessageId = default(string))
         {
             this.MessageId = messageId;
             this.MessageType = messageType;
@@ -82,14 +82,14 @@ namespace Isbm2RestClient.Model
         /// </summary>
         /// <value>The duration after which the message will be automatically expired. Negative duration is no duration. Duration as defined by XML Schema xs:duration, http://w3c.org/TR/xmlschema-2/#duration</value>
         [DataMember(Name = "expiry", EmitDefaultValue = false)]
-        public string Expiry { get; set; }
+        public string? Expiry { get; set; }
 
         /// <summary>
         /// Only valid for Response messages; refers to the original Request message.
         /// </summary>
         /// <value>Only valid for Response messages; refers to the original Request message.</value>
         [DataMember(Name = "requestMessageId", EmitDefaultValue = false)]
-        public string RequestMessageId { get; set; }
+        public string? RequestMessageId { get; set; }
 
         /// <summary>
         /// Gets or Sets additional properties

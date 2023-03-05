@@ -71,7 +71,7 @@ public class RestProviderRequest : IProviderRequest
 
         var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, restMessage );
 
-        return new ResponseMessage( message.MessageId, messageContent, Array.Empty<string>(), "" );
+        return new ResponseMessage( message.MessageId, messageContent, requestMessageId );
     }
 
     public async Task CloseSession( string sessionId )

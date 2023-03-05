@@ -46,7 +46,7 @@ namespace Isbm2RestClient.Model
         /// <param name="listenerUrl">listenerUrl.</param>
         /// <param name="topics">topics.</param>
         /// <param name="filterExpressions">filterExpressions.</param>
-        public Session(string sessionId = default(string), SessionType? sessionType = default(SessionType?), string listenerUrl = default(string), List<string> topics = default(List<string>), List<FilterExpression> filterExpressions = default(List<FilterExpression>))
+        public Session(string sessionId = default(string), SessionType? sessionType = default(SessionType?), string? listenerUrl = default(string), List<string> topics = default(List<string>), List<FilterExpression> filterExpressions = default(List<FilterExpression>))
         {
             this.SessionId = sessionId;
             this.SessionType = sessionType;
@@ -66,7 +66,7 @@ namespace Isbm2RestClient.Model
         /// Gets or Sets ListenerUrl
         /// </summary>
         [DataMember(Name = "listenerUrl", EmitDefaultValue = false)]
-        public string ListenerUrl { get; set; }
+        public string? ListenerUrl { get; set; }
 
         /// <summary>
         /// Gets or Sets Topics
