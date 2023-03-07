@@ -8,7 +8,7 @@ namespace Isbm2Client.Test;
 
 public class RequestProviderFixture : IAsyncLifetime
 {
-    public const string CHANNEL_URI = "/pittsh/test/request/provider";
+    public readonly string CHANNEL_URI = $"/pittsh/test/request/provider/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestRequestProviderTest class";
 
     public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
@@ -41,10 +41,10 @@ public class RequestProviderFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await Task.Yield();
-        //var management = new RestChannelManagement(Config);
+        // await Task.Yield();
+        var management = new RestChannelManagement(Config);
 
-        //await management.DeleteChannel(CHANNEL_URI);
+        await management.DeleteChannel(CHANNEL_URI);
     }
 }
 

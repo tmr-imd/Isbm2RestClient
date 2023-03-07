@@ -13,6 +13,7 @@ public class RestConsumerRequestTest
 
     private static readonly string BOO = "Boo!";
     private static readonly string BOO_TOPIC = "Boo Topic!";
+    private static readonly string EXPIRY = "P1D";
 
     public RestConsumerRequestTest( RequestConsumerFixture fixture )
     {
@@ -46,7 +47,7 @@ public class RestConsumerRequestTest
     {
         RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
 
-        _ = await consumer.PostRequest( session.Id, BOO, BOO_TOPIC );
+        _ = await consumer.PostRequest( session.Id, BOO, BOO_TOPIC, EXPIRY );
 
         await consumer.CloseSession( session.Id );
     }
@@ -59,7 +60,7 @@ public class RestConsumerRequestTest
 
         try
         {
-            await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC);
+            await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC, EXPIRY);
 
             var requestMessage = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
@@ -86,5 +87,19 @@ public class RestConsumerRequestTest
             await consumer.CloseSession(consumerSession.Id);
             await provider.CloseSession(providerSession.Id);
         }
+    }
+
+    [Fact]
+    public async Task ExpirePublication()
+    {
+        RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
+
+        Message message = await consumer.PostRequest(session.Id, BOO, BOO_TOPIC);
+
+        Assert.NotEmpty(message.Id);
+
+        await consumer.ExpireRequest( session.Id, message.Id );
+
+        await provider.CloseSession( session.Id );
     }
 }
