@@ -34,16 +34,15 @@ public class RestProviderPublication : IProviderPublication
         return new PublicationProviderSession( session.SessionId );
     }
 
-    public async Task<PublicationMessage> PostPublication<T>(string sessionId, T content, string topic) where T : notnull
+    public async Task<PublicationMessage> PostPublication<T>(string sessionId, T content, string topic, string? expiry = null) where T : notnull
     {
         var topics = new[] { topic };
 
-        return await PostPublication<T>(sessionId, content, topics );
+        return await PostPublication<T>(sessionId, content, topics, expiry);
     }
 
-    public async Task<PublicationMessage> PostPublication<T>(string sessionId, T content, IEnumerable<string> topics) where T : notnull
+    public async Task<PublicationMessage> PostPublication<T>(string sessionId, T content, IEnumerable<string> topics, string? expiry = null) where T : notnull
     {
-        string? expiry = null; // TODO: replace with parameter later once expiry has been implemented
         var messageContent = Model.MessageContent.From(content);
 
         var restMessage = new RestModel.Message

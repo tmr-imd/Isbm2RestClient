@@ -13,6 +13,7 @@ public class RestProviderPublicationTest
 
     private static readonly string BOO = "Boo!";
     private static readonly string BOO_TOPIC = "Boo Topic!";
+    private static readonly string EXPIRY = "P1D";
 
     public RestProviderPublicationTest( PublicationProviderFixture fixture )
     {
@@ -46,7 +47,7 @@ public class RestProviderPublicationTest
     {
         PublicationProviderSession session = await provider.OpenSession(channel.Uri);
 
-        PublicationMessage message = await provider.PostPublication( session.Id, BOO, BOO_TOPIC );
+        PublicationMessage message = await provider.PostPublication( session.Id, BOO, BOO_TOPIC, EXPIRY );
 
         Assert.NotNull(message.Id);
         Assert.NotEmpty(message.Id);

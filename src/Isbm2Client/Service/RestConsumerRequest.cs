@@ -54,26 +54,32 @@ public class RestConsumerRequest : IConsumerRequest
         return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl);
     }
 
-    public Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic ) where T : notnull
+    public Task<RequestMessage> PostRequest<T>( string sessionId, T content, string topic, string? expiry = null ) where T : notnull
     {
         var topics = new[] { topic };
 
-        return PostRequest( sessionId, content, topics );
+        return PostRequest( sessionId, content, topics, expiry );
     }
 
-    public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics ) where T : notnull
+    public async Task<RequestMessage> PostRequest<T>( string sessionId, T content, IEnumerable<string> topics, string? expiry = null ) where T : notnull
     {
         var messageContent = Model.MessageContent.From(content);
 
         var restMessage = new RestModel.Message
         ( 
             messageContent: messageContent.ToRestMessageContent(), 
-            topics: topics.ToList() 
+            topics: topics.ToList(),
+            expiry: expiry
         );
 
         var message = await _requestApi.PostRequestAsync( sessionId, restMessage );
 
         return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
+    }
+
+    public async Task ExpireRequest(string sessionId, string messageId)
+    {
+        await _requestApi.ExpireRequestAsync( sessionId, messageId );
     }
 
     public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
