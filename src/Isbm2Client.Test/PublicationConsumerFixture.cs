@@ -8,7 +8,7 @@ namespace Isbm2Client.Test;
 
 public class PublicationConsumerFixture : IAsyncLifetime
 {
-    public const string CHANNEL_URI = "/isbm2restclient/test/publication/consumer";
+    public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/consumer/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestPublicationConsumerTest class";
 
     public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
@@ -41,10 +41,9 @@ public class PublicationConsumerFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        await Task.Yield();
-        //var management = new RestChannelManagement(Config);
+        var management = new RestChannelManagement(Config);
 
-        //await management.DeleteChannel(CHANNEL_URI);
+        await management.DeleteChannel(CHANNEL_URI);
     }
 }
 
