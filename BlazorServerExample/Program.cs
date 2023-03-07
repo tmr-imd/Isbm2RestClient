@@ -18,10 +18,13 @@ builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"
 builder.Services.AddScoped<IChannelManagement, RestChannelManagement>();
 builder.Services.AddScoped<IProviderRequest, RestProviderRequest>();
 builder.Services.AddScoped<IConsumerRequest, RestConsumerRequest>();
+builder.Services.AddScoped<IProviderPublication, RestProviderPublication>();
+builder.Services.AddScoped<IConsumerPublication, RestConsumerPublication>();
 
 builder.Services.AddScoped<StructureAssetService>();
 
 builder.Services.AddScoped<RequestViewModel>();
+builder.Services.AddScoped<PublicationViewModel>();
 
 // Once the client grows, we could create a single helper method like this:
 //builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"));
