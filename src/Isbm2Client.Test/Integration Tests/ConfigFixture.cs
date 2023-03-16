@@ -2,7 +2,7 @@
 using Isbm2Client.Service;
 using Microsoft.Extensions.Options;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Test.Integration_Tests;
 
 public class ConfigFixture
 {

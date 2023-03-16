@@ -4,12 +4,12 @@ using Isbm2Client.Service;
 using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Test.Integration_Tests;
 
-public class PublicationConsumerFixture : IAsyncLifetime
+public class PublicationProviderFixture : IAsyncLifetime
 {
-    public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/consumer/{Guid.NewGuid()}";
-    public const string CHANNEL_DESCRIPTION = "For RestPublicationConsumerTest class";
+    public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/provider/{Guid.NewGuid()}";
+    public const string CHANNEL_DESCRIPTION = "For RestPublicationProviderTest class";
 
     public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
     {
@@ -47,8 +47,8 @@ public class PublicationConsumerFixture : IAsyncLifetime
     }
 }
 
-[CollectionDefinition("Publication Consumer collection")]
-public class PublicationConsumerCollection : ICollectionFixture<PublicationConsumerFixture>
+[CollectionDefinition("Publication Provider collection")]
+public class PublicationProviderCollection : ICollectionFixture<PublicationProviderFixture>
 {
     // This class has no code, and is never created. Its purpose is simply
     // to be the place to apply [CollectionDefinition] and all the

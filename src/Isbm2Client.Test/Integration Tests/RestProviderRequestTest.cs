@@ -3,7 +3,7 @@ using Isbm2Client.Model;
 using Isbm2RestClient.Client;
 using System.Text.Json;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Test.Integration_Tests;
 
 [Collection("Request Provider collection")]
 public class RestProviderRequestTest

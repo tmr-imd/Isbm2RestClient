@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using RestSharp;
 using RestClient = Isbm2RestClient.Client;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Test.Integration_Tests;
 
 public class RequestProviderFixture : IAsyncLifetime
 {
@@ -38,14 +38,9 @@ public class RequestProviderFixture : IAsyncLifetime
             RequestChannel = (RequestChannel)channel;
         }
 
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = Config.Value.EndPoint
-        };
-
-        var requestApi = new ConsumerRequestServiceApi(apiConfig);
-
         Provider = new RestProviderRequest(Config);
+
+        var requestApi = new ConsumerRequestServiceApi( Config.Value.EndPoint );
         Consumer = new RestConsumerRequest(requestApi);
     }
 

@@ -6,7 +6,7 @@ using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 using RestClient = Isbm2RestClient.Client;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Test.Integration_Tests;
 
 public class RequestConsumerFixture : IAsyncLifetime
 {

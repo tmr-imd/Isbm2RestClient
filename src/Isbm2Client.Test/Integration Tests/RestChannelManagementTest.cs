@@ -1,7 +1,7 @@
 using Isbm2Client.Model;
 using Isbm2Client.Service;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Test.Integration_Tests;
 
 public class RestChannelManagementTest : IClassFixture<ConfigFixture>
 {
