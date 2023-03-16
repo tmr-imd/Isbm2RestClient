@@ -19,6 +19,7 @@ builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"
 var endPoint = builder.Configuration.GetSection("Isbm").GetValue<string>("EndPoint");
 
 builder.Services.AddScoped<IConsumerRequestServiceApi>( x => new ConsumerRequestServiceApi(endPoint) );
+builder.Services.AddScoped<IProviderRequestServiceApi>( x => new ProviderRequestServiceApi(endPoint) );
 
 builder.Services.AddScoped<IChannelManagement, RestChannelManagement>();
 builder.Services.AddScoped<IProviderRequest, RestProviderRequest>();
