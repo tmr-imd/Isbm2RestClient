@@ -11,7 +11,7 @@ namespace Isbm2Client.Test;
 
 public class RestConsumerRequestTest
 {
-    private static readonly string CHANNEL_URI = "/request/consumer";
+    private static string CHANNEL_URI = "/fred";
     private static readonly string CARROTS = "Carrots!";
     private static readonly string BOO = "Boo!";
     private static readonly string BOO_TOPIC = "Boo Topic!";

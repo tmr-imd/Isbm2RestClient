@@ -11,7 +11,7 @@ namespace Isbm2Client.Test;
 
 public class RestProviderRequestTest
 {
-    private static string CHANNEL_URI = "/fred";
+    private static string CHANNEL_URI = "/request/provider";
     private static readonly string YO_TOPIC = "Yo!";
     private static readonly string YO = "Yo!";
     private static readonly string CARROTS = "Carrots!";
