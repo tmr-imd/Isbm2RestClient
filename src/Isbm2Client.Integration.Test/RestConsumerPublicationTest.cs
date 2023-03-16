@@ -3,7 +3,7 @@ using Isbm2Client.Model;
 using Isbm2RestClient.Client;
 using System.Text.Json;
 
-namespace Isbm2Client.Test.Integration_Tests;
+namespace Isbm2Client.Integration.Test;
 
 [Collection("Publication Consumer collection")]
 public class RestConsumerPublicationTest

@@ -1,4 +1,4 @@
-﻿namespace Isbm2Client.Test.Integration_Tests;
+﻿namespace Isbm2Client.Integration.Test;
 
 public class TestObject
 {

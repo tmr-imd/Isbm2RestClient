@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorServerExample", "Blaz
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D537A6AA-1F0C-4EB3-BC47-2C80C0EEACDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IsbmClientExample", "src\IsbmClientExample\IsbmClientExample.csproj", "{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IsbmClientExample", "src\IsbmClientExample\IsbmClientExample.csproj", "{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Isbm2Client.Integration.Test", "src\Isbm2Client.Integration.Test\Isbm2Client.Integration.Test.csproj", "{2E14440B-3774-4C05-8419-C30DC745668C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,14 +49,18 @@ Global
 		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E14440B-3774-4C05-8419-C30DC745668C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E14440B-3774-4C05-8419-C30DC745668C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E14440B-3774-4C05-8419-C30DC745668C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E14440B-3774-4C05-8419-C30DC745668C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {E09186B9-BE40-485C-B8C6-F545F18295E2}
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3FFA29E8-FA5F-443B-B52B-2A4C8209DDAA} = {D537A6AA-1F0C-4EB3-BC47-2C80C0EEACDC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E09186B9-BE40-485C-B8C6-F545F18295E2}
 	EndGlobalSection
 EndGlobal

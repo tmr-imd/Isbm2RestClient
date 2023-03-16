@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using RestSharp;
 using RestClient = Isbm2RestClient.Client;
 
-namespace Isbm2Client.Test.Integration_Tests;
+namespace Isbm2Client.Integration.Test;
 
 public class RequestProviderFixture : IAsyncLifetime
 {

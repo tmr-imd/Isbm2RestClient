@@ -2,7 +2,7 @@ using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2RestClient.Client;
 
-namespace Isbm2Client.Test.Integration_Tests;
+namespace Isbm2Client.Integration.Test;
 
 [Collection("Request Consumer collection")]
 public class RestConsumerRequestTest
