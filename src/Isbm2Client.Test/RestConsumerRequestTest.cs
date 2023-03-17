@@ -16,9 +16,7 @@ public class RestConsumerRequestTest
     private static readonly string BOO_TOPIC = "Boo Topic!";
     private static readonly string EXPIRY = "P1D";
 
-    private readonly IConsumerRequest consumer;
-
-    public RestConsumerRequestTest()
+    private static IConsumerRequest MockConsumer()
     {
         var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestConsumer);
 
@@ -47,12 +45,14 @@ public class RestConsumerRequestTest
         mock.Setup(api => api.ReadResponseAsync(session.SessionId, booMessage.MessageId, 0, default))
             .ReturnsAsync(carrotMessage);
 
-        consumer = new RestConsumerRequest(mock.Object);
+        return new RestConsumerRequest(mock.Object);
     }
 
     [Fact]
     public async Task OpenAndCloseSession()
     {
+        var consumer = MockConsumer();
+
         var session = await consumer.OpenSession(CHANNEL_URI);
 
         Assert.True(!string.IsNullOrEmpty(session.Id));
@@ -63,6 +63,8 @@ public class RestConsumerRequestTest
     [Fact]
     public async Task PostRequest()
     {
+        var consumer = MockConsumer();
+
         RequestConsumerSession session = await consumer.OpenSession(CHANNEL_URI);
 
         var request = await consumer.PostRequest(session.Id, BOO, BOO_TOPIC, EXPIRY);
@@ -75,6 +77,8 @@ public class RestConsumerRequestTest
     [Fact]
     public async Task ReadResponse()
     {
+        var consumer = MockConsumer();
+
         RequestConsumerSession session = await consumer.OpenSession(CHANNEL_URI);
 
         var request = await consumer.PostRequest(session.Id, BOO, BOO_TOPIC, EXPIRY);
@@ -93,6 +97,8 @@ public class RestConsumerRequestTest
     [Fact]
     public async Task ExpirePublication()
     {
+        var consumer = MockConsumer();
+
         RequestConsumerSession session = await consumer.OpenSession(CHANNEL_URI);
 
         Message message = await consumer.PostRequest(session.Id, BOO, BOO_TOPIC);
