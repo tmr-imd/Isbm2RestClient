@@ -16,14 +16,7 @@ public class RestProviderRequestTest
     private static readonly string YO = "Yo!";
     private static readonly string CARROTS = "Carrots!";
 
-    private readonly IProviderRequest provider;
-
-    public RestProviderRequestTest()
-    {
-        provider = SetupDefault();
-    }
-
-    private static IProviderRequest SetupDefault()
+    private static IProviderRequest MockProvider()
     {
         var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestProvider);
 
@@ -52,7 +45,7 @@ public class RestProviderRequestTest
 
         return new RestProviderRequest(mock.Object);
     }
-    private static IProviderRequest SetupJsonDocument()
+    private static IProviderRequest MockProviderWithJsonDocument()
     {
         var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestProvider);
 
@@ -80,7 +73,7 @@ public class RestProviderRequestTest
 
         return new RestProviderRequest(mock.Object);
     }
-    private static IProviderRequest SetupComplexObject()
+    private static IProviderRequest MockProviderWithComplexObject()
     {
         var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestProvider);
 
@@ -115,6 +108,8 @@ public class RestProviderRequestTest
     [Fact]
     public async Task OpenAndCloseSession()
     {
+        var provider = MockProvider();
+
         var session = await provider.OpenSession( CHANNEL_URI, YO_TOPIC );
 
         Assert.True(!string.IsNullOrEmpty(session.Id));
@@ -125,6 +120,8 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadStringRequest()
     {
+        var provider = MockProvider();
+
         var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
 
         var request = await provider.ReadRequest(session.Id);
@@ -141,8 +138,7 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadJsonDocumentRequest()
     {
-        // Bypass default provider
-        var provider = SetupJsonDocument();
+        var provider = MockProviderWithJsonDocument();
 
         var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
 
@@ -162,8 +158,7 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadComplexObjectRequest()
     {
-        // Bypass default provider
-        var provider = SetupComplexObject();
+        var provider = MockProviderWithComplexObject();
 
         var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
 
@@ -180,6 +175,8 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadRequestPostResponse()
     {
+        var provider = MockProvider();
+
         var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
 
         var request = await provider.ReadRequest(session.Id);
