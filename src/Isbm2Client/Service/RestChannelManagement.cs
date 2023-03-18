@@ -1,5 +1,6 @@
 using Isbm2Client.Model;
 using Isbm2Client.Interface;
+using Isbm2Client.Extensions;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
@@ -21,6 +22,7 @@ public class RestChannelManagement : IChannelManagement
         // TODO: proper configuration
 
         _channelApi = new RestApi.ChannelManagementApi( apiConfig );
+        _channelApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     } 
 
     public async Task<T> CreateChannel<T>(string channelUri, string description) where T : Channel {

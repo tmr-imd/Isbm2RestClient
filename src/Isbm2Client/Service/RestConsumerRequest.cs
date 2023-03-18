@@ -13,6 +13,7 @@ public class RestConsumerRequest : IConsumerRequest
     public RestConsumerRequest( IConsumerRequestServiceApi requestApi )
     {
         _requestApi = requestApi;
+        _requestApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<RequestConsumerSession> OpenSession( string channelUri )

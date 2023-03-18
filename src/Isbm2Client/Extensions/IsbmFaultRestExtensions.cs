@@ -20,7 +20,7 @@ public static class IsbmFaultRestExtensions
         var status = (int)response.StatusCode;
         if (status == 0)
         {
-            new ClientException($"Error calling {methodName}: {response.ErrorText}");
+            return new ClientException($"Error calling {methodName}: {response.ErrorText}");
         }
         if (status < 400) return null;
 
@@ -35,7 +35,7 @@ public static class IsbmFaultRestExtensions
                 $"Error calling {methodName}: {response.RawContent}\n{response.Headers}");
         }
 
-        if (ReadMessage.IsMatch(methodName)
+        if (ReadMessage.IsMatch(methodName) && response.StatusCode == HttpStatusCode.NotFound
             && (!(faultString.GetString()?.Contains("session", StringComparison.InvariantCultureIgnoreCase) ?? false )
                 || (faultString.GetString()?.Contains("message", StringComparison.InvariantCultureIgnoreCase) ?? false)) )
         {
@@ -49,76 +49,75 @@ public static class IsbmFaultRestExtensions
         switch (response.StatusCode)
         {
             case HttpStatusCode.BadRequest:
+                faultType = methodName switch
                 {
-                    faultType = methodName switch
-                    {
-                        // Namespace faults are kind of parameter fault, so we assume it is a namespace fault
-                        // if the fault string mentions namespaces (only applies to opening subscription and provider request sessions)
-                        var op when OpenSessionWithFilters.IsMatch(op)
-                                && (faultString.GetString()?.Contains("namespace", StringComparison.InvariantCultureIgnoreCase) ?? false)
-                            => IsbmFaultType.NamespaceFault,
-                        _ => IsbmFaultType.ParameterFault
-                    };
-                    break;
-                }
+                    // Namespace faults are kind of parameter fault, so we assume it is a namespace fault
+                    // if the fault string mentions namespaces (only applies to opening subscription and provider request sessions)
+                    var op when OpenSessionWithFilters.IsMatch(op)
+                            && (faultString.GetString()?.Contains("namespace", StringComparison.InvariantCultureIgnoreCase) ?? false)
+                        => IsbmFaultType.NamespaceFault,
+                    _ => IsbmFaultType.ParameterFault
+                };
+                break;
             case HttpStatusCode.NotFound:
+                faultType = methodName switch
                 {
-                    faultType = methodName switch
-                    {
-                        "GetChannel" => IsbmFaultType.ChannelFault,
-                        "DeleteChannel" => IsbmFaultType.ChannelFault,
-                        "AddSecurityTokens" => IsbmFaultType.ChannelFault,
-                        "RemoveSecurityTokens" => IsbmFaultType.ChannelFault,
-                        var op when OpenAnySession.IsMatch(op) => IsbmFaultType.ChannelFault,
-                        // "OpenPublicationSession" => IsbmFaultType.ChannelFault,
-                        // "OpenSubscriptionSession" => IsbmFaultType.ChannelFault,
-                        // "OpenProviderRequestSession" => IsbmFaultType.ChannelFault,
-                        // "OpenConsumerRequestSession" => IsbmFaultType.ChannelFault,
-                        "CloseSession" => IsbmFaultType.SessionFault,
-                        var op when MessageOperation.IsMatch(op) => IsbmFaultType.SessionFault,
-                        // "ReadPublication" => IsbmFaultType.SessionFault,
-                        // "RemovePublication" => IsbmFaultType.SessionFault,
-                        // "PostPublication" => IsbmFaultType.SessionFault,
-                        // "ExpirePublication" => IsbmFaultType.SessionFault,
-                        // "ReadRequest" => IsbmFaultType.SessionFault,
-                        // "RemoveRequest" => IsbmFaultType.SessionFault,
-                        // "PostRequest" => IsbmFaultType.SessionFault,
-                        // "ExpireRequest" => IsbmFaultType.SessionFault,
-                        // "ReadResponse" => IsbmFaultType.SessionFault,
-                        // "RemoveResponse" => IsbmFaultType.SessionFault,
-                        // "PostResponse" => IsbmFaultType.SessionFault,
-                        _ => IsbmFaultType.Unknown
-                    };
-                    break;
-                }
+                    "GetChannel" => IsbmFaultType.ChannelFault,
+                    "DeleteChannel" => IsbmFaultType.ChannelFault,
+                    "AddSecurityTokens" => IsbmFaultType.ChannelFault,
+                    "RemoveSecurityTokens" => IsbmFaultType.ChannelFault,
+                    var op when OpenAnySession.IsMatch(op) => IsbmFaultType.ChannelFault,
+                    // "OpenPublicationSession" => IsbmFaultType.ChannelFault,
+                    // "OpenSubscriptionSession" => IsbmFaultType.ChannelFault,
+                    // "OpenProviderRequestSession" => IsbmFaultType.ChannelFault,
+                    // "OpenConsumerRequestSession" => IsbmFaultType.ChannelFault,
+                    "CloseSession" => IsbmFaultType.SessionFault,
+                    var op when MessageOperation.IsMatch(op) => IsbmFaultType.SessionFault,
+                    // "ReadPublication" => IsbmFaultType.SessionFault,
+                    // "RemovePublication" => IsbmFaultType.SessionFault,
+                    // "PostPublication" => IsbmFaultType.SessionFault,
+                    // "ExpirePublication" => IsbmFaultType.SessionFault,
+                    // "ReadRequest" => IsbmFaultType.SessionFault,
+                    // "RemoveRequest" => IsbmFaultType.SessionFault,
+                    // "PostRequest" => IsbmFaultType.SessionFault,
+                    // "ExpireRequest" => IsbmFaultType.SessionFault,
+                    // "ReadResponse" => IsbmFaultType.SessionFault,
+                    // "RemoveResponse" => IsbmFaultType.SessionFault,
+                    // "PostResponse" => IsbmFaultType.SessionFault,
+                    _ => IsbmFaultType.Unknown
+                };
+                break;
             case HttpStatusCode.Conflict:
+                faultType = methodName switch
                 {
-                    faultType = methodName switch
-                    {
-                        "CreateChannel" => IsbmFaultType.ChannelFault,
-                        "AddSecurityTokens" => IsbmFaultType.OperationFault,
-                        "RemoveSecurityTokens" => IsbmFaultType.SecurityTokenFault,
-                        _ => IsbmFaultType.Unknown
-                    };
-                    break;
-                }
+                    "CreateChannel" => IsbmFaultType.ChannelFault,
+                    "AddSecurityTokens" => IsbmFaultType.OperationFault,
+                    "RemoveSecurityTokens" => IsbmFaultType.SecurityTokenFault,
+                    _ => IsbmFaultType.Unknown
+                };
+                break;
             case HttpStatusCode.UnprocessableEntity:
+                faultType = methodName switch
                 {
-                    faultType = methodName switch
-                    {
-                        var op when OpenAnySession.IsMatch(op) => IsbmFaultType.OperationFault,
-                        var op when MessageOperation.IsMatch(op) => IsbmFaultType.SessionFault,
-                        _ => IsbmFaultType.Unknown
-                    };
-                    break;
-                } 
+                    var op when OpenAnySession.IsMatch(op) => IsbmFaultType.OperationFault,
+                    var op when MessageOperation.IsMatch(op) => IsbmFaultType.SessionFault,
+                    _ => IsbmFaultType.Unknown
+                };
+                break;
+            case HttpStatusCode.Unauthorized:
+                faultType = methodName switch
+                {
+                    "GetSecurityDetails" => IsbmFaultType.SecurityTokenFault,
+                    _ => IsbmFaultType.Unknown
+                };
+                break;
             default:
                 return new IsbmFault(IsbmFaultType.Unknown,
-                    response.RawContent,
+                    faultString.GetString(),
                     $"Error calling {methodName} (Unexpected HTTP Status ${response.StatusCode}): {response.RawContent}\n{response.Headers}");;
         }
         return new IsbmFault(faultType,
-            response.RawContent,
+            faultString.GetString(),
             $"Error calling {methodName}: {response.RawContent}\n{response.Headers}");
     };
 

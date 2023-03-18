@@ -39,7 +39,7 @@ public class RestProviderPublicationTest
 
         Task closeAgain() => provider.CloseSession(session.Id);
 
-        await Assert.ThrowsAsync<ApiException>(closeAgain);
+        await Assert.ThrowsAsync<IsbmFault>(closeAgain);
     }
 
     [Fact]

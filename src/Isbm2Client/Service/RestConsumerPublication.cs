@@ -23,6 +23,7 @@ public class RestConsumerPublication : IConsumerPublication
         // TODO: proper configuration
 
         _publicationApi = new RestApi.ConsumerPublicationServiceApi(apiConfig);
+        _publicationApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<PublicationConsumerSession> OpenSession(string channelUri, string topic, string? listenerUri = null)

@@ -23,6 +23,7 @@ public class RestProviderPublication : IProviderPublication
         // TODO: proper configuration
 
         _publicationApi = new RestApi.ProviderPublicationServiceApi(apiConfig);
+        _publicationApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<PublicationProviderSession> OpenSession(string channelUri)

@@ -23,6 +23,7 @@ public class RestProviderRequest : IProviderRequest
         // TODO: proper configuration
 
         _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
+        _requestApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public Task<RequestProviderSession> OpenSession(string channelUrl, string topic)

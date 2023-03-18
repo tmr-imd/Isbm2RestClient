@@ -39,7 +39,7 @@ public class RestConsumerRequestTest
 
         Task closeAgain() => consumer.CloseSession(session.Id);
 
-        await Assert.ThrowsAsync<ApiException>(closeAgain);
+        await Assert.ThrowsAsync<IsbmFault>(closeAgain);
     }
 
     [Fact]
