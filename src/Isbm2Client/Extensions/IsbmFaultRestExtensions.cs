@@ -1,6 +1,5 @@
 using Isbm2Client.Model;
 using RestClient = Isbm2RestClient.Client;
-using RestModel = Isbm2RestClient.Model;
 using RestException = Isbm2RestClient.Client.ApiException;
 using HttpStatusCode = System.Net.HttpStatusCode;
 using System.Text.RegularExpressions;
@@ -15,6 +14,13 @@ public static class IsbmFaultRestExtensions
     private static readonly Regex MessageOperation = new Regex("((Read)|(Remove)|(Post)|(Expire))((Publication)|(Request)|(Response))");
     private static readonly Regex ReadMessage = new Regex("Read((Publication)|(Request)|(Response))");
 
+    /// <summary>
+    /// Exception Factory delegate to be assigned to the REST service client implementations to ensure
+    /// only IsbmtFault and ClientException type exceptions are raised.
+    /// </summary>
+    /// <remarks>
+    /// This covers exceptions that would be raised as a result of processing the HTTP response.
+    /// </remarks>
     public static readonly RestClient.ExceptionFactory IsbmFaultFactory = (methodName, response) =>
     {
         var status = (int)response.StatusCode;
@@ -68,23 +74,8 @@ public static class IsbmFaultRestExtensions
                     "AddSecurityTokens" => IsbmFaultType.ChannelFault,
                     "RemoveSecurityTokens" => IsbmFaultType.ChannelFault,
                     var op when OpenAnySession.IsMatch(op) => IsbmFaultType.ChannelFault,
-                    // "OpenPublicationSession" => IsbmFaultType.ChannelFault,
-                    // "OpenSubscriptionSession" => IsbmFaultType.ChannelFault,
-                    // "OpenProviderRequestSession" => IsbmFaultType.ChannelFault,
-                    // "OpenConsumerRequestSession" => IsbmFaultType.ChannelFault,
                     "CloseSession" => IsbmFaultType.SessionFault,
                     var op when MessageOperation.IsMatch(op) => IsbmFaultType.SessionFault,
-                    // "ReadPublication" => IsbmFaultType.SessionFault,
-                    // "RemovePublication" => IsbmFaultType.SessionFault,
-                    // "PostPublication" => IsbmFaultType.SessionFault,
-                    // "ExpirePublication" => IsbmFaultType.SessionFault,
-                    // "ReadRequest" => IsbmFaultType.SessionFault,
-                    // "RemoveRequest" => IsbmFaultType.SessionFault,
-                    // "PostRequest" => IsbmFaultType.SessionFault,
-                    // "ExpireRequest" => IsbmFaultType.SessionFault,
-                    // "ReadResponse" => IsbmFaultType.SessionFault,
-                    // "RemoveResponse" => IsbmFaultType.SessionFault,
-                    // "PostResponse" => IsbmFaultType.SessionFault,
                     _ => IsbmFaultType.Unknown
                 };
                 break;
@@ -122,8 +113,28 @@ public static class IsbmFaultRestExtensions
             $"Error calling {methodName}: {response.RawContent}\n{response.Headers}");
     };
 
-    public static IsbmFault FromApiError(RestException apiError)
+    /// <summary>
+    /// Converts an ApiException from the REST client implementation into an IsbmFault
+    /// or ClientException as appropriate.
+    /// </summary>
+    /// <remarks>
+    /// This covers exceptions that are raised directly by the client implementation, 
+    /// such as those from client-side validation.
+    /// </remarks>
+    /// <param name="apiError">The original ApiException</param>
+    /// <returns>IsbmFault or ClientException</returns>
+    public static Exception FromApiError(RestException apiError)
     {
-        return new IsbmFault(IsbmFaultType.ChannelFault);
+        // Only 400s for argument exceptions (ParameterFaults) and 500 for
+        // deserialisation errors are produced by the generated REST API classes
+        // Everything is a ClientException as it is something that is raised by
+        // the client library implementation; we assume deserialization errors
+        // are the fault of the server.
+        return apiError.ErrorCode switch
+        {
+            400 => new IsbmFault(IsbmFaultType.ParameterFault, message: apiError.Message, innerException: apiError),
+            500 => new IsbmFault(IsbmFaultType.Unknown, message: apiError.Message, innerException: apiError),
+            _ => new ClientException(message: apiError.Message, innerException: apiError)
+        };
     }
 }

@@ -7,9 +7,9 @@ using RestModel = Isbm2RestClient.Model;
 using RestClient = Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 
-namespace Isbm2Client.Service; 
+namespace Isbm2Client.Service;
 
-public class RestChannelManagement : IChannelManagement
+public class RestChannelManagement : AbstractRestService, IChannelManagement
 {
     private readonly RestApi.ChannelManagementApi _channelApi;
 
@@ -23,35 +23,28 @@ public class RestChannelManagement : IChannelManagement
 
         _channelApi = new RestApi.ChannelManagementApi( apiConfig );
         _channelApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
-    } 
+    }
 
-    public async Task<T> CreateChannel<T>(string channelUri, string description) where T : Channel {
-        // TODO: error handling
+    public async Task<T> CreateChannel<T>(string channelUri, string description) where T : notnull, Channel {
         var channelType = typeof(T) == typeof(PublicationChannel) ? RestModel.ChannelType.Publication : RestModel.ChannelType.Request;
         var toBeChannel = new RestModel.Channel(channelUri, channelType, description);
-        Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    "));
+        Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    ")); // TODO: Convert to Logging
 
-        var createdChannel = await _channelApi.CreateChannelAsync(toBeChannel);
-        var instance = Activator.CreateInstance(typeof(T), channelUri, createdChannel.Description) as T;
-
-        if ( instance is null ) throw new Exception("Uh oh");
+        var createdChannel = await ProtectedApiCallAsync( async () => await _channelApi.CreateChannelAsync(toBeChannel));
+        var instance = CreateInstance<T>(typeof(T), channelUri, createdChannel.Description);
 
         return instance;
     }
 
     public async Task DeleteChannel(string channelUri) {
-        // TODO: error handling
-        Console.WriteLine("Deleting channel {0}", channelUri);
-        await _channelApi.DeleteChannelAsync(channelUri);
+        Console.WriteLine("Deleting channel {0}", channelUri); // TODO: Convert to logging
+        await ProtectedApiCallAsync( async () => await _channelApi.DeleteChannelAsync(channelUri) );
     }
 
     public async Task<Channel> GetChannel(string channelUri) {
-        // TODO: error handling
-        var channel = await _channelApi.GetChannelAsync(channelUri);
+        var channel = await ProtectedApiCallAsync( async () => await _channelApi.GetChannelAsync(channelUri) );
         var type = channel.ChannelType == RestModel.ChannelType.Publication ? typeof(PublicationChannel) : typeof(RequestChannel);
-        var instance = Activator.CreateInstance(type, channelUri, channel.Description) as Channel;
-
-        if ( instance is null ) throw new Exception( "Uh oh" );
+        var instance = CreateInstance<Channel>(type, channelUri, channel.Description);
 
         return instance;
     }

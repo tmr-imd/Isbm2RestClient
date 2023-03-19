@@ -9,7 +9,7 @@ using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
-public class RestProviderRequest : IProviderRequest
+public class RestProviderRequest : AbstractRestService, IProviderRequest
 {
     private readonly RestApi.ProviderRequestServiceApi _requestApi;
 
@@ -42,16 +42,14 @@ public class RestProviderRequest : IProviderRequest
             FilterExpressions = new List<RestModel.FilterExpression>()
         };
 
-        var session = await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams );
-
-        if ( session is null ) throw new Exception( "Uh oh" );
+        var session = await ProtectedApiCallAsync( async () => await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams ) );
 
         return new RequestProviderSession( session.SessionId, null, sessionParams.Topics.ToArray(), Array.Empty<string>() );
     }
 
     public async Task<RequestMessage?> ReadRequest(string sessionId)
     {
-        var response = await _requestApi.ReadRequestAsync( sessionId );
+        var response = await ProtectedApiCallAsync( async () => await _requestApi.ReadRequestAsync( sessionId ) );
         if (response.NotFound()) return null;
 
         var content = response.MessageContent.Content.ActualInstance;
@@ -62,7 +60,7 @@ public class RestProviderRequest : IProviderRequest
 
     public async Task RemoveRequest(string sessionId)
     {
-        await _requestApi.RemoveRequestAsync( sessionId );
+        await ProtectedApiCallAsync( async () => await _requestApi.RemoveRequestAsync( sessionId ) );
     }
 
     public async Task<ResponseMessage> PostResponse<T>( string sessionId, string requestMessageId, T content ) where T : notnull
@@ -71,13 +69,13 @@ public class RestProviderRequest : IProviderRequest
         var restMessageContent = messageContent.ToRestMessageContent();
         var restMessage = new RestModel.Message( messageContent: restMessageContent );
 
-        var message = await _requestApi.PostResponseAsync( sessionId, requestMessageId, restMessage );
+        var message = await ProtectedApiCallAsync( async () => await _requestApi.PostResponseAsync( sessionId, requestMessageId, restMessage ) );
 
         return new ResponseMessage( message.MessageId, messageContent, requestMessageId );
     }
 
     public async Task CloseSession( string sessionId )
     {
-        await _requestApi.CloseSessionAsync( sessionId );
+        await ProtectedApiCallAsync( async () => await _requestApi.CloseSessionAsync( sessionId ) );
     }
 }

@@ -9,7 +9,7 @@ using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
-public class RestConsumerPublication : IConsumerPublication
+public class RestConsumerPublication : AbstractRestService, IConsumerPublication
 {
     private readonly RestApi.ConsumerPublicationServiceApi _publicationApi;
 
@@ -42,16 +42,14 @@ public class RestConsumerPublication : IConsumerPublication
             ListenerUrl = listenerUri,
         };
 
-        var session = await _publicationApi.OpenSubscriptionSessionAsync( channelUri, sessionParams );
-
-        if ( session is null ) throw new Exception( "Uh oh" );
+        var session = await ProtectedApiCallAsync( async () => await _publicationApi.OpenSubscriptionSessionAsync( channelUri, sessionParams ) );
 
         return new PublicationConsumerSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
     }
 
     public async Task<PublicationMessage?> ReadPublication(string sessionId)
     {
-        var response = await _publicationApi.ReadPublicationAsync( sessionId );
+        var response = await ProtectedApiCallAsync( async () => await _publicationApi.ReadPublicationAsync( sessionId ) );
         if (response.NotFound()) return null;
 
         var content = response.MessageContent.Content.ActualInstance;
@@ -62,11 +60,11 @@ public class RestConsumerPublication : IConsumerPublication
 
     public async Task RemovePublication(string sessionId)
     {
-        await _publicationApi.RemovePublicationAsync(sessionId);
+        await ProtectedApiCallAsync( async () => await _publicationApi.RemovePublicationAsync(sessionId) );
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await _publicationApi.CloseSessionAsync(sessionId);
+        await ProtectedApiCallAsync( async () => await _publicationApi.CloseSessionAsync(sessionId) );
     }
 }
