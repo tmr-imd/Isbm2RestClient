@@ -80,10 +80,8 @@ public class IsbmFaultRestTest
 
         Assert.NotNull(fault);
         Assert.IsType<IsbmFault>(fault);
-#pragma warning disable CS8600, CS8602 // Converting null literal or possible null value to non-nullable type.
-        Assert.Equal(IsbmFaultType.Unknown, ((IsbmFault)fault).FaultType);
-        Assert.Equal(response.RawContent, ((IsbmFault)fault).ServerFaultString);
-#pragma warning restore CS8600, CS8602 // Converting null literal or possible null value to non-nullable type.
+        Assert.Equal(IsbmFaultType.Unknown, ((IsbmFault?)fault)?.FaultType);
+        Assert.Equal(response.RawContent, ((IsbmFault?)fault)?.ServerFaultString);
     }
 
     [Theory]
@@ -120,10 +118,8 @@ public class IsbmFaultRestTest
 
         Assert.NotNull(fault);
         Assert.IsType<IsbmFault>(fault);
-#pragma warning disable CS8600, CS8602 // Converting null literal or possible null value to non-nullable type.
-        Assert.Equal(IsbmFaultType.SessionFault, ((IsbmFault)fault).FaultType);
-        Assert.Equal(restFault.Fault, ((IsbmFault)fault).ServerFaultString);
-#pragma warning restore CS8600, CS8602 // Converting null literal or possible null value to non-nullable type.
+        Assert.Equal(IsbmFaultType.SessionFault, ((IsbmFault?)fault)?.FaultType);
+        Assert.Equal(restFault.Fault, ((IsbmFault?)fault)?.ServerFaultString);
     }
 
     [Theory]
@@ -149,10 +145,8 @@ public class IsbmFaultRestTest
 
         Assert.NotNull(fault);
         Assert.IsType<IsbmFault>(fault);
-#pragma warning disable CS8600, CS8602 // Converting null literal or possible null value to non-nullable type.
-        Assert.Equal(expectedFaultType, ((IsbmFault)fault).FaultType);
-        Assert.Equal(restFault.Fault, ((IsbmFault)fault).ServerFaultString);
-#pragma warning restore CS8600, CS8602 // Converting null literal or possible null value to non-nullable type.
+        Assert.Equal(expectedFaultType, ((IsbmFault?)fault)?.FaultType);
+        Assert.Equal(restFault.Fault, ((IsbmFault?)fault)?.ServerFaultString);
     }
 
     // Data methods

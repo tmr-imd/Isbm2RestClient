@@ -56,7 +56,7 @@ public class RequestViewModel : IAsyncDisposable
         {
             requestChannel = await channelManagement.CreateChannel<RequestChannel>(ChannelUri, "Test");
         }
-        catch (ApiException)
+        catch (IsbmFault e) when (e.FaultType == IsbmFaultType.ChannelFault)
         {
             await channelManagement.DeleteChannel(ChannelUri);
 
@@ -103,6 +103,8 @@ public class RequestViewModel : IAsyncDisposable
     public async Task Respond()
     {
         var requestMessage = await provider.ReadRequest(providerSession.Id);
+        if (requestMessage is null) throw new Exception("There was no Request to read");
+
         await provider.RemoveRequest(providerSession.Id);
 
         var requestFilter = requestMessage.MessageContent.Deserialise<StructureAssetsFilter>();
@@ -114,6 +116,8 @@ public class RequestViewModel : IAsyncDisposable
     public async Task<IEnumerable<StructureAsset>> ReadResponse( string requestId )
     {
         var message = await consumer.ReadResponse( consumerSession.Id, requestId );
+        if (message is null) throw new Exception("There was no Response to read");
+
         await consumer.RemoveResponse( consumerSession.Id, requestId );
 
         var payload = message.MessageContent.Deserialise<RequestStructures>();

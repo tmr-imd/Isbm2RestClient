@@ -73,9 +73,11 @@ public class RestConsumerRequest : IConsumerRequest
         await _requestApi.ExpireRequestAsync( sessionId, messageId );
     }
 
-    public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
+    public async Task<ResponseMessage?> ReadResponse(string sessionId, string requestMessageId)
     {
         var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
+        if (response.NotFound()) return null;
+
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = Model.MessageContent.From( content );
 

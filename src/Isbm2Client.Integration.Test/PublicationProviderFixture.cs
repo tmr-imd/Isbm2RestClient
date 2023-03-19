@@ -28,7 +28,7 @@ public class PublicationProviderFixture : IAsyncLifetime
         {
             PublicationChannel = await management.CreateChannel<PublicationChannel>( CHANNEL_URI, CHANNEL_DESCRIPTION );
         }
-        catch ( ApiException )
+        catch (IsbmFault e) when (e.FaultType == IsbmFaultType.ChannelFault)
         {
             var channel = await management.GetChannel(CHANNEL_URI);
 

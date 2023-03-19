@@ -25,6 +25,7 @@ public class PublicationViewModel : IAsyncDisposable
     public bool Ready { get; set; }
 
     public IEnumerable<StructureAsset> StructureAssets { get; set; } = Enumerable.Empty<StructureAsset>();
+    public CancellationTokenSource CancelTokenSource { get; } = new CancellationTokenSource();
 
     private readonly IChannelManagement channelManagement;
     private readonly IProviderPublication provider;
@@ -53,7 +54,7 @@ public class PublicationViewModel : IAsyncDisposable
         {
             publishChannel = await channelManagement.CreateChannel<PublicationChannel>(ChannelUri, "Test");
         }
-        catch (ApiException)
+        catch (IsbmFault e) when (e.FaultType == IsbmFaultType.ChannelFault)
         {
             await channelManagement.DeleteChannel(ChannelUri);
 
@@ -68,13 +69,18 @@ public class PublicationViewModel : IAsyncDisposable
 
     private async Task Teardown()
     {
+        CancelTokenSource.Cancel();
+        Console.WriteLine("Cancelling read poll");
+        await Task.Delay(2501);
+        Console.WriteLine("Wait over, closing sessions");
+
         if ( consumer != null && consumerSession != null ) await consumer.CloseSession(consumerSession.Id);
         if ( provider != null && providerSession != null ) await provider.CloseSession(providerSession.Id);
 
         try {
             if ( publishChannel != null ) await channelManagement.DeleteChannel( publishChannel.Uri );
         }
-        catch (ApiException) {
+        catch (IsbmFault) {
             // Do nothing. Although why does this seem to be getting called so often?
         }
     }
@@ -103,6 +109,7 @@ public class PublicationViewModel : IAsyncDisposable
     public async Task<NewStructureAsset> Read()
     {
         var message = await consumer.ReadPublication(consumerSession.Id);
+        if (message == null) throw new Exception("No message");
         await consumer.RemovePublication(consumerSession.Id);
 
         var newStructure = message.MessageContent.Deserialise<NewStructureAsset>();

@@ -48,6 +48,7 @@ public class RestConsumerPublicationTest
         var providerSession = await provider.OpenSession( channel.Uri );
         var consumerSession = await consumer.OpenSession( channel.Uri, YO_TOPIC );
 
+        Assert.Null(await consumer.ReadPublication( consumerSession.Id ));
         await provider.PostPublication(providerSession.Id, YO, YO_TOPIC);
 
         try
@@ -55,9 +56,10 @@ public class RestConsumerPublicationTest
             var message = await consumer.ReadPublication( consumerSession.Id );
             await consumer.RemovePublication( consumerSession.Id );
 
-            Assert.NotEmpty(message.Id);
+            Assert.NotNull(message);
+            Assert.NotEmpty(message?.Id);
 
-            var content = message.MessageContent.Deserialise<string>();
+            var content = message?.MessageContent.Deserialise<string>();
 
             Assert.NotNull(content);
             Assert.Contains(YO, content);
@@ -83,6 +85,7 @@ public class RestConsumerPublicationTest
 
         var document = JsonSerializer.SerializeToDocument( inputContent );
 
+        Assert.Null(await consumer.ReadPublication( consumerSession.Id ));
         await provider.PostPublication(providerSession.Id, document, YO_TOPIC);
 
         try
@@ -90,9 +93,10 @@ public class RestConsumerPublicationTest
             var message = await consumer.ReadPublication( consumerSession.Id );
             await consumer.RemovePublication( consumerSession.Id );
 
-            Assert.NotEmpty(message.Id);
+            Assert.NotNull(message);
+            Assert.NotEmpty(message?.Id);
 
-            var content = message.MessageContent.Content;
+            var content = message?.MessageContent.Content;
 
             Assert.NotNull(content);
 
@@ -123,6 +127,7 @@ public class RestConsumerPublicationTest
             }
         };
 
+        Assert.Null(await consumer.ReadPublication(consumerSession.Id));
         await provider.PostPublication(providerSession.Id, inputContent, YO_TOPIC);
 
         try
@@ -130,11 +135,12 @@ public class RestConsumerPublicationTest
             var message = await consumer.ReadPublication(consumerSession.Id);
             await consumer.RemovePublication( consumerSession.Id );
 
-            Assert.NotEmpty(message.Id);
+            Assert.NotNull(message);
+            Assert.NotEmpty(message?.Id);
 
-            var content = message.MessageContent.Deserialise<TestObject>();
+            var content = message?.MessageContent.Deserialise<TestObject>();
 
-            Assert.True(content.Weather["Hobart"] == 2);
+            Assert.True(content?.Weather["Hobart"] == 2);
         }
         finally
         {

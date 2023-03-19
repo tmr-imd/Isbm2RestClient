@@ -108,7 +108,6 @@
 @code {
     bool working;
     string error = "";
-    CancellationTokenSource cancel = new CancellationTokenSource();
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,7 +140,7 @@
         catch( Exception ex )
         {
             error = ex.Message;
-            cancel.Cancel();
+            viewModel.CancelTokenSource.Cancel();
             working = false;
             StateHasChanged();
         }
@@ -149,7 +148,7 @@
 
     public void StartPollRead()
     {
-        PollRead(cancel.Token).ContinueWith((Task t) =>  
+        PollRead(viewModel.CancelTokenSource.Token).ContinueWith((Task t) =>  
         {
             _ = InvokeAsync(() => 
             {
@@ -157,8 +156,11 @@
                 working = false;
                 StateHasChanged();
             });
-            StartPollRead();
-        });
+            if (t.IsCompletedSuccessfully && !viewModel.CancelTokenSource.Token.IsCancellationRequested)
+            {
+                StartPollRead();
+            }
+        }, viewModel.CancelTokenSource.Token);
     }
 
     private async Task PollRead(CancellationToken cancel)
@@ -166,9 +168,13 @@
         // Could move this to ViewModel, but using the logger here and does not make any real difference
         for ( var read = viewModel.Read(); !read.IsCompletedSuccessfully; )
         {
-            if (cancel.IsCancellationRequested) throw new TaskCanceledException();
+            if (cancel.IsCancellationRequested)
+            {
+                Logger.LogInformation("Cancel received");
+                throw new TaskCanceledException("Read poll Cancel received");
+            }
             read = viewModel.Read(); // If we put this in the for increment slot the condition checks the new object.
-            Logger.LogInformation("Polling for posted messages to read");
+            Logger.LogInformation($"Polling for posted messages to read ({viewModel.GetHashCode()})");
             try {
                 await read;
                 Logger.LogInformation("Message read");

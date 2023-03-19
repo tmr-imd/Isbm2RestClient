@@ -48,6 +48,7 @@ public class RestProviderRequestTest
         var providerSession = await provider.OpenSession( channel.Uri, YO_TOPIC );
         var consumerSession = await consumer.OpenSession( channel.Uri );
 
+        Assert.Null(await provider.ReadRequest( providerSession.Id ));
         await consumer.PostRequest(consumerSession.Id, YO, YO_TOPIC);
 
         try
@@ -55,7 +56,8 @@ public class RestProviderRequestTest
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            var content = message.MessageContent.Deserialise<string>();
+            Assert.NotNull(message);
+            var content = message?.MessageContent.Deserialise<string>();
 
             Assert.NotNull(content);
             Assert.Contains(YO, content);
@@ -81,6 +83,7 @@ public class RestProviderRequestTest
 
         var document = JsonSerializer.SerializeToDocument( inputContent );
 
+        Assert.Null(await provider.ReadRequest( providerSession.Id ));
         await consumer.PostRequest(consumerSession.Id, document, YO_TOPIC);
 
         try
@@ -88,7 +91,8 @@ public class RestProviderRequestTest
             var message = await provider.ReadRequest( providerSession.Id );
             await provider.RemoveRequest( providerSession.Id );
 
-            var content = message.MessageContent.Content;
+            Assert.NotNull(message);
+            var content = message?.MessageContent.Content;
 
             Assert.NotNull(content);
 
@@ -119,6 +123,7 @@ public class RestProviderRequestTest
             }
         };
 
+        Assert.Null(await provider.ReadRequest(providerSession.Id));
         await consumer.PostRequest(consumerSession.Id, inputContent, YO_TOPIC);
 
         try
@@ -126,9 +131,10 @@ public class RestProviderRequestTest
             var message = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            var content = message.MessageContent.Deserialise<TestObject>();
+            Assert.NotNull(message);
+            var content = message?.MessageContent.Deserialise<TestObject>();
 
-            Assert.True(content.Weather["Hobart"] == 2);
+            Assert.True(content?.Weather["Hobart"] == 2);
         }
         finally
         {
@@ -143,6 +149,7 @@ public class RestProviderRequestTest
         var providerSession = await provider.OpenSession(channel.Uri, YO_TOPIC);
         var consumerSession = await consumer.OpenSession(channel.Uri);
 
+        Assert.Null(await provider.ReadRequest(providerSession.Id));
         await consumer.PostRequest(consumerSession.Id, YO, YO_TOPIC);
 
         try
@@ -150,11 +157,14 @@ public class RestProviderRequestTest
             var requestMessage = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            var content = requestMessage.MessageContent.Deserialise<string>();
+            Assert.NotNull(requestMessage);
+            var requestMessageId = requestMessage?.Id ?? "NotNull asserted above. This is to avoid null warnings.";
+
+            var content = requestMessage?.MessageContent.Deserialise<string>();
 
             Assert.True( content == YO );
 
-            var message = await provider.PostResponse( providerSession.Id, requestMessage.Id, "Carrots!" );
+            var message = await provider.PostResponse( providerSession.Id, requestMessageId, "Carrots!" );
 
             Assert.NotNull( message );
             Assert.Contains( "Carrots", message.MessageContent.Deserialise<string>() );

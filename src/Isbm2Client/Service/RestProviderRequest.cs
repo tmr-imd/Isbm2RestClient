@@ -49,9 +49,10 @@ public class RestProviderRequest : IProviderRequest
         return new RequestProviderSession( session.SessionId, null, sessionParams.Topics.ToArray(), Array.Empty<string>() );
     }
 
-    public async Task<RequestMessage> ReadRequest(string sessionId)
+    public async Task<RequestMessage?> ReadRequest(string sessionId)
     {
         var response = await _requestApi.ReadRequestAsync( sessionId );
+        if (response.NotFound()) return null;
 
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = MessageContent.From( content );

@@ -49,9 +49,11 @@ public class RestConsumerPublication : IConsumerPublication
         return new PublicationConsumerSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
     }
 
-    public async Task<PublicationMessage> ReadPublication(string sessionId)
+    public async Task<PublicationMessage?> ReadPublication(string sessionId)
     {
         var response = await _publicationApi.ReadPublicationAsync( sessionId );
+        if (response.NotFound()) return null;
+
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = Model.MessageContent.From( content );
 

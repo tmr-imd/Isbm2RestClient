@@ -36,8 +36,9 @@ public static class IsbmFaultRestExtensions
         }
 
         if (ReadMessage.IsMatch(methodName) && response.StatusCode == HttpStatusCode.NotFound
-            && (!(faultString.GetString()?.Contains("session", StringComparison.InvariantCultureIgnoreCase) ?? false )
-                || (faultString.GetString()?.Contains("message", StringComparison.InvariantCultureIgnoreCase) ?? false)) )
+            && (!hasFault // for servers that do not use a fault element in the 404.
+                || (!(faultString.GetString()?.Contains("session", StringComparison.InvariantCultureIgnoreCase) ?? false )
+                    || (faultString.GetString()?.Contains("message", StringComparison.InvariantCultureIgnoreCase) ?? false)) ) )
         {
             // We assume that if the fault does not mention the 'session' or it also mentions 'message',
             // then it is saying that there are no messages.

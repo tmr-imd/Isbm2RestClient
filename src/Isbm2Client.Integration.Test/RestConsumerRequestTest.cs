@@ -60,24 +60,29 @@ public class RestConsumerRequestTest
 
         try
         {
+            Assert.Null(await provider.ReadRequest(providerSession.Id));
             await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC, EXPIRY);
 
             var requestMessage = await provider.ReadRequest(providerSession.Id);
             await provider.RemoveRequest( providerSession.Id );
 
-            var requestContent = requestMessage.MessageContent.Deserialise<string>();
+            Assert.NotNull(requestMessage);
+            var requestMessageId = requestMessage?.Id ?? "NotNull asserted above. This is to avoid null warnings.";
+
+            var requestContent = requestMessage?.MessageContent.Deserialise<string>();
 
             Assert.True(requestContent == BOO);
 
-            var responseMessage = await provider.PostResponse(providerSession.Id, requestMessage.Id, "Carrots!");
+            var responseMessage = await provider.PostResponse(providerSession.Id, requestMessageId, "Carrots!");
 
             Assert.NotNull( responseMessage );
             Assert.Contains("Carrots", responseMessage.MessageContent.Deserialise<string>());
 
-            var message = await consumer.ReadResponse( consumerSession.Id, requestMessage.Id );
-            await consumer.RemoveResponse( consumerSession.Id, requestMessage.Id );
+            var message = await consumer.ReadResponse( consumerSession.Id, requestMessageId );
+            await consumer.RemoveResponse( consumerSession.Id, requestMessageId );
 
-            var content = message.MessageContent.Deserialise<string>();
+            Assert.NotNull(message);
+            var content = message?.MessageContent.Deserialise<string>();
 
             Assert.NotNull(content);
             Assert.Contains("Carrots!", content);

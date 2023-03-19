@@ -100,7 +100,7 @@ class SimpleClient {
         while (readNext) {
             var message = ReadPublication(sessionId);
             if (readNext = message != null && (messages.Count == 0 || messages[messages.Count - 1].MessageId != message.MessageId)) {
-                messages.Add(message);
+                messages.Add(message ?? new Message());
                 RemovePublication(sessionId);
             }
         }
