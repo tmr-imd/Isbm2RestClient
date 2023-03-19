@@ -10,11 +10,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<StructureAssetService>();
 
-// This will go away soon...
 builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"));
-
-var clientConfig = new ClientConfig();
-builder.Configuration.GetSection( "Isbm" ).Bind( clientConfig );
+var clientConfig = builder.Configuration.GetSection("Isbm").Get<ClientConfig>();
 builder.Services.AddIsbmRestClient( clientConfig );
 
 builder.Services.AddScoped<StructureAssetService>();
