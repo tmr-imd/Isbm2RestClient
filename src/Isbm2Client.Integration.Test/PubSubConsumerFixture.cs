@@ -1,13 +1,12 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Microsoft.Extensions.Options;
 using RestApi = Isbm2RestClient.Api;
 using RestClient = Isbm2RestClient.Client;
 
 namespace Isbm2Client.Integration.Test;
 
-public class PublicationConsumerFixture : IAsyncLifetime
+public class PubSubConsumerFixture : IAsyncLifetime
 {
     public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/consumer/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestPublicationConsumerTest class";
@@ -54,7 +53,7 @@ public class PublicationConsumerFixture : IAsyncLifetime
 }
 
 [CollectionDefinition("Publication Consumer collection")]
-public class PublicationConsumerCollection : ICollectionFixture<PublicationConsumerFixture>
+public class PublicationConsumerCollection : ICollectionFixture<PubSubConsumerFixture>
 {
     // This class has no code, and is never created. Its purpose is simply
     // to be the place to apply [CollectionDefinition] and all the

@@ -5,7 +5,7 @@ using Isbm2RestClient.Client;
 namespace Isbm2Client.Integration.Test;
 
 [Collection("Publication Provider collection")]
-public class RestProviderPublicationTest
+public class PubSubProviderTest
 {
     private readonly PublicationChannel channel;
     private readonly IConsumerPublication consumer;
@@ -15,7 +15,7 @@ public class RestProviderPublicationTest
     private static readonly string BOO_TOPIC = "Boo Topic!";
     private static readonly string EXPIRY = "P1D";
 
-    public RestProviderPublicationTest( PubSubProviderFixture fixture )
+    public PubSubProviderTest( PubSubProviderFixture fixture )
     {
         channel = fixture.PublicationChannel;
         provider = fixture.Provider;

@@ -6,7 +6,7 @@ using RestClient = Isbm2RestClient.Client;
 
 namespace Isbm2Client.Integration.Test;
 
-public class PublicationProviderFixture : IAsyncLifetime
+public class PubSubProviderFixture : IAsyncLifetime
 {
     public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/provider/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestPublicationProviderTest class";
@@ -54,7 +54,7 @@ public class PublicationProviderFixture : IAsyncLifetime
 }
 
 [CollectionDefinition("Publication Provider collection")]
-public class PublicationProviderCollection : ICollectionFixture<PublicationProviderFixture>
+public class PublicationProviderCollection : ICollectionFixture<PubSubProviderFixture>
 {
     // This class has no code, and is never created. Its purpose is simply
     // to be the place to apply [CollectionDefinition] and all the

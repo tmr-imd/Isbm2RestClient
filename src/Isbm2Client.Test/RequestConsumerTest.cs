@@ -7,7 +7,7 @@ using RestModel = Isbm2RestClient.Model;
 
 namespace Isbm2Client.Test;
 
-public class RequestResponseConsumerTest
+public class RequestConsumerTest
 {
     private static readonly string CHANNEL_URI = "/request/consumer";
     private static readonly string CARROTS = "Carrots!";

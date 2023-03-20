@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace Isbm2Client.Integration.Test;
 
 [Collection("Publication Consumer collection")]
-public class RestConsumerPublicationTest
+public class PubSubConsumerTest
 {
     private readonly PublicationChannel channel;
     private readonly IConsumerPublication consumer;
@@ -15,7 +15,7 @@ public class RestConsumerPublicationTest
     private static readonly string YO = "Yo!";
     private static readonly string YO_TOPIC = "Yo Topic!";
 
-    public RestConsumerPublicationTest( PubSubConsumerFixture fixture )
+    public PubSubConsumerTest( PubSubConsumerFixture fixture )
     {
         channel = fixture.PublicationChannel;
         provider = fixture.Provider;
