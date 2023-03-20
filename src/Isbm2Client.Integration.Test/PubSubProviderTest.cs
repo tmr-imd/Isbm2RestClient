@@ -15,7 +15,7 @@ public class RestProviderPublicationTest
     private static readonly string BOO_TOPIC = "Boo Topic!";
     private static readonly string EXPIRY = "P1D";
 
-    public RestProviderPublicationTest( PublicationProviderFixture fixture )
+    public RestProviderPublicationTest( PubSubProviderFixture fixture )
     {
         channel = fixture.PublicationChannel;
         provider = fixture.Provider;

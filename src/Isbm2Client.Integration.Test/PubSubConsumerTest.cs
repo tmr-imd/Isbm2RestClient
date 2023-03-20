@@ -15,7 +15,7 @@ public class RestConsumerPublicationTest
     private static readonly string YO = "Yo!";
     private static readonly string YO_TOPIC = "Yo Topic!";
 
-    public RestConsumerPublicationTest( PublicationConsumerFixture fixture )
+    public RestConsumerPublicationTest( PubSubConsumerFixture fixture )
     {
         channel = fixture.PublicationChannel;
         provider = fixture.Provider;
