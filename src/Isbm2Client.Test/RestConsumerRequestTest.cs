@@ -1,8 +1,6 @@
 ﻿using Isbm2Client.Extensions;
-using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using Moq;
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
@@ -11,7 +9,7 @@ namespace Isbm2Client.Test;
 
 public class RestConsumerRequestTest
 {
-    private static string CHANNEL_URI = "/fred";
+    private static readonly string CHANNEL_URI = "/request/consumer";
     private static readonly string CARROTS = "Carrots!";
     private static readonly string BOO = "Boo!";
     private static readonly string BOO_TOPIC = "Boo Topic!";

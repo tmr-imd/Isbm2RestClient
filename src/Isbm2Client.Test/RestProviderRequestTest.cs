@@ -2,10 +2,10 @@ using Isbm2Client.Extensions;
 using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Isbm2RestClient.Api;
 using Moq;
 using System.Text.Json;
 using RestModel = Isbm2RestClient.Model;
+using RestApi = Isbm2RestClient.Api;
 
 namespace Isbm2Client.Test;
 
@@ -16,118 +16,60 @@ public class RestProviderRequestTest
     private static readonly string YO = "Yo!";
     private static readonly string CARROTS = "Carrots!";
 
-    private static IProviderRequest MockProvider()
+    [Fact]
+    public async Task OpenSession()
     {
-        var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestProvider);
-
-        var yoMessage = new RestModel.Message(
-            messageId: Guid.NewGuid().ToString(),
-            messageContent: MessageContent.From(YO).ToRestMessageContent(),
-            topics: new List<string>() { YO_TOPIC }
+        var apiSession = new RestModel.Session
+        (
+            Guid.NewGuid().ToString(),
+            RestModel.SessionType.RequestConsumer
         );
 
-        var carrotMessage = new RestModel.Message(
-            messageId: Guid.NewGuid().ToString(),
-            messageContent: MessageContent.From(CARROTS).ToRestMessageContent(),
-            topics: new List<string>() { YO_TOPIC }
-        );
-
-        var mock = new Mock<IProviderRequestServiceApi>();
-
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
         mock.Setup(api => api.OpenProviderRequestSessionAsync(CHANNEL_URI, It.IsAny<RestModel.Session>(), 0, default))
-            .ReturnsAsync(session);
+            .ReturnsAsync(apiSession);
 
-        mock.Setup(api => api.ReadRequestAsync(session.SessionId, 0, default))
-            .ReturnsAsync(yoMessage);
+        var provider = new RestProviderRequest(mock.Object);
 
-        mock.Setup(api => api.PostResponseAsync(session.SessionId, yoMessage.MessageId, It.IsAny<RestModel.Message>(), 0, default))
-            .ReturnsAsync(carrotMessage);
+        RequestProviderSession session = await provider.OpenSession( CHANNEL_URI, YO_TOPIC );
 
-        return new RestProviderRequest(mock.Object);
-    }
-    private static IProviderRequest MockProviderWithJsonDocument()
-    {
-        var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestProvider);
-
-        var inputContent = new Dictionary<string, object>()
-        {
-            { "fred", "barney" },
-            { "wilma", "betty" }
-        };
-
-        var document = JsonSerializer.SerializeToDocument(inputContent);
-
-        var jsonMessage = new RestModel.Message(
-            messageId: Guid.NewGuid().ToString(),
-            messageContent: MessageContent.From(document).ToRestMessageContent(),
-            topics: new List<string>() { YO_TOPIC }
-        );
-
-        var mock = new Mock<IProviderRequestServiceApi>();
-
-        mock.Setup(api => api.OpenProviderRequestSessionAsync(CHANNEL_URI, It.IsAny<RestModel.Session>(), 0, default))
-            .ReturnsAsync(session);
-
-        mock.Setup(api => api.ReadRequestAsync(session.SessionId, 0, default))
-            .ReturnsAsync(jsonMessage);
-
-        return new RestProviderRequest(mock.Object);
-    }
-    private static IProviderRequest MockProviderWithComplexObject()
-    {
-        var session = new RestModel.Session(Guid.NewGuid().ToString(), RestModel.SessionType.RequestProvider);
-
-        var complexObject = new TestObject()
-        {
-            Numbers = new[] { 23.0, 45, 100 },
-            Text = "Hello",
-            Weather = new Dictionary<string, double>()
-            {
-                {"Devonport", 14.0 },
-                {"Hobart", 2.0 }
-            }
-        };
-
-        var jsonMessage = new RestModel.Message(
-            messageId: Guid.NewGuid().ToString(),
-            messageContent: MessageContent.From(complexObject).ToRestMessageContent(),
-            topics: new List<string>() { YO_TOPIC }
-        );
-
-        var mock = new Mock<IProviderRequestServiceApi>();
-
-        mock.Setup(api => api.OpenProviderRequestSessionAsync(CHANNEL_URI, It.IsAny<RestModel.Session>(), 0, default))
-            .ReturnsAsync(session);
-
-        mock.Setup(api => api.ReadRequestAsync(session.SessionId, 0, default))
-            .ReturnsAsync(jsonMessage);
-
-        return new RestProviderRequest(mock.Object);
+        Assert.True(!string.IsNullOrEmpty(session.Id));
+        Assert.Equal(apiSession.SessionId, session.Id);
     }
 
     [Fact]
-    public async Task OpenAndCloseSession()
+    public async Task CloseSession()
     {
-        var provider = MockProvider();
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
+        var provider = new RestProviderRequest(mock.Object);
 
-        var session = await provider.OpenSession( CHANNEL_URI, YO_TOPIC );
+        var sessionId = Guid.NewGuid().ToString();
+        await provider.CloseSession(sessionId);
 
-        Assert.True(!string.IsNullOrEmpty(session.Id));
-
-        await provider.CloseSession( session.Id );
+        mock.Verify(api => api.CloseSessionAsync(sessionId, 0, default), Times.Exactly(1));
     }
 
     [Fact]
     public async Task ReadStringRequest()
     {
-        var provider = MockProvider();
+        var sessionId = Guid.NewGuid().ToString();
+        var apiMessageYo = new RestModel.Message
+        (
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(YO).ToRestMessageContent(),
+            topics: new List<string>() { YO_TOPIC }
+        );
 
-        var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
+        mock.Setup( api => api.ReadRequestAsync(sessionId, 0, default))
+            .ReturnsAsync( apiMessageYo );
 
-        var request = await provider.ReadRequest(session.Id);
-        await provider.RemoveRequest(session.Id);
+        var provider = new RestProviderRequest(mock.Object);
+
+        RequestMessage request = await provider.ReadRequest(sessionId);
 
         Assert.True(!string.IsNullOrEmpty(request.Id));
+        Assert.Equal(apiMessageYo.MessageId, request.Id);
 
         var content = request.MessageContent.Deserialise<string>();
 
@@ -138,14 +80,31 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadJsonDocumentRequest()
     {
-        var provider = MockProviderWithJsonDocument();
+        var sessionId = Guid.NewGuid().ToString();
+        var inputContent = new Dictionary<string, object>()
+        {
+            { "fred", "barney" },
+            { "wilma", "betty" }
+        };
 
-        var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
+        var document = JsonSerializer.SerializeToDocument(inputContent);
 
-        var request = await provider.ReadRequest(session.Id);
-        await provider.RemoveRequest(session.Id);
+        var apiMessageJson = new RestModel.Message(
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(document).ToRestMessageContent(),
+            topics: new List<string>() { YO_TOPIC }
+        );
+
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
+        mock.Setup(api => api.ReadRequestAsync(sessionId, 0, default))
+            .ReturnsAsync(apiMessageJson);
+
+        var provider = new RestProviderRequest(mock.Object);
+
+        RequestMessage request = await provider.ReadRequest(sessionId);
 
         Assert.True(!string.IsNullOrEmpty(request.Id));
+        Assert.Equal(apiMessageJson.MessageId, request.Id);
 
         var content = request.MessageContent.Content;
 
@@ -158,14 +117,36 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadComplexObjectRequest()
     {
-        var provider = MockProviderWithComplexObject();
+        var sessionId = Guid.NewGuid().ToString();
 
-        var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
+        var complexObject = new TestObject()
+        {
+            Numbers = new[] { 23.0, 45, 100 },
+            Text = "Hello",
+            Weather = new Dictionary<string, double>()
+            {
+                {"Devonport", 14.0 },
+                {"Hobart", 2.0 }
+            }
+        };
 
-        var request = await provider.ReadRequest(session.Id);
-        await provider.RemoveRequest(session.Id);
+        var apiMessageTestObject = new RestModel.Message(
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(complexObject).ToRestMessageContent(),
+            topics: new List<string>() { YO_TOPIC }
+        );
+
+
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
+        mock.Setup(api => api.ReadRequestAsync(sessionId, 0, default))
+            .ReturnsAsync(apiMessageTestObject);
+
+        var provider = new RestProviderRequest(mock.Object);
+
+        RequestMessage request = await provider.ReadRequest(sessionId);
 
         Assert.True(!string.IsNullOrEmpty(request.Id));
+        Assert.Equal(apiMessageTestObject.MessageId, request.Id);
 
         var content = request.MessageContent.Deserialise<TestObject>();
 
@@ -175,20 +156,39 @@ public class RestProviderRequestTest
     [Fact]
     public async Task ReadRequestPostResponse()
     {
-        var provider = MockProvider();
+        var sessionId = Guid.NewGuid().ToString();
+        var requestId = Guid.NewGuid().ToString();
 
-        var session = await provider.OpenSession(CHANNEL_URI, YO_TOPIC);
+        var apiMessageCarrot = new RestModel.Message
+        (
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(CARROTS).ToRestMessageContent(),
+            topics: new List<string>() { YO_TOPIC }
+        );
 
-        var request = await provider.ReadRequest(session.Id);
-        await provider.RemoveRequest(session.Id);
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
+        mock.Setup(api => api.PostResponseAsync(sessionId, requestId, It.IsAny<RestModel.Message>(), 0, default))
+            .ReturnsAsync(apiMessageCarrot);
 
-        var content = request.MessageContent.Deserialise<string>();
+        var provider = new RestProviderRequest(mock.Object);
 
-        Assert.True(content == YO);
+        var message = await provider.PostResponse(sessionId, requestId, CARROTS);
 
-        var message = await provider.PostResponse(session.Id, request.Id, CARROTS);
-
-        Assert.True( !string.IsNullOrEmpty(message.Id) );
+        Assert.True(!string.IsNullOrEmpty(message.Id));
+        Assert.Equal(apiMessageCarrot.MessageId, message.Id);
         Assert.Contains(CARROTS, message.MessageContent.Deserialise<string>());
+    }
+
+    [Fact]
+    public async Task RemoveRequest()
+    {
+        var mock = new Mock<RestApi.IProviderRequestServiceApi>();
+        var provider = new RestProviderRequest(mock.Object);
+
+        var sessionId = Guid.NewGuid().ToString();
+
+        await provider.RemoveRequest(sessionId);
+
+        mock.Verify(api => api.RemoveRequestAsync(sessionId, 0, default), Times.Exactly(1));
     }
 }
