@@ -12,6 +12,8 @@ public static class IsbmClientExtensions
         services.AddScoped<RestApi.IChannelManagementApi>(x => new RestApi.ChannelManagementApi(config.EndPoint));
         services.AddScoped<RestApi.IConsumerRequestServiceApi>(x => new RestApi.ConsumerRequestServiceApi(config.EndPoint));
         services.AddScoped<RestApi.IProviderRequestServiceApi>(x => new RestApi.ProviderRequestServiceApi(config.EndPoint));
+        services.AddScoped<RestApi.IConsumerPublicationServiceApi>(x => new RestApi.ConsumerPublicationServiceApi(config.EndPoint));
+        services.AddScoped<RestApi.IProviderPublicationServiceApi>(x => new RestApi.ProviderPublicationServiceApi(config.EndPoint));
 
         services.AddScoped<IChannelManagement, RestChannelManagement>();
         services.AddScoped<IProviderRequest, RestProviderRequest>();
