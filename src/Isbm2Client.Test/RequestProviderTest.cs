@@ -9,7 +9,7 @@ using RestApi = Isbm2RestClient.Api;
 
 namespace Isbm2Client.Test;
 
-public class RestProviderRequestTest
+public class RequestResponseProviderTest
 {
     private static string CHANNEL_URI = "/request/provider";
     private static readonly string YO_TOPIC = "Yo!";

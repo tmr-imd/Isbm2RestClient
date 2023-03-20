@@ -6,7 +6,7 @@ using RestModel = Isbm2RestClient.Model;
 
 namespace Isbm2Client.Test;
 
-public class RestChannelManagementTest
+public class ChannelManagementTest
 {
     public const string CHANNEL_URI = "/channel/request";
     public const string CHANNEL_DESCRIPTION = "fred";
