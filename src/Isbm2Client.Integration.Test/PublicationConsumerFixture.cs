@@ -1,8 +1,9 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using RestApi = Isbm2RestClient.Api;
+using RestClient = Isbm2RestClient.Client;
 
 namespace Isbm2Client.Integration.Test;
 
@@ -15,6 +16,10 @@ public class PublicationConsumerFixture : IAsyncLifetime
     {
         EndPoint = "https://isbm.lab.oiiecosystem.net/rest"
     });
+    public readonly RestClient.Configuration ApiConfig = new()
+    {
+        BasePath = "https://isbm.lab.oiiecosystem.net/rest"
+    };
 
     public PublicationChannel PublicationChannel { get; set; } = null!;
     public IProviderPublication Provider { get; set; } = null!;
@@ -22,13 +27,14 @@ public class PublicationConsumerFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         try
         {
             PublicationChannel = await management.CreateChannel<PublicationChannel>( CHANNEL_URI, CHANNEL_DESCRIPTION );
         }
-        catch ( ApiException )
+        catch ( RestClient.ApiException )
         {
             var channel = await management.GetChannel(CHANNEL_URI);
 
@@ -41,7 +47,8 @@ public class PublicationConsumerFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         await management.DeleteChannel(CHANNEL_URI);
     }

@@ -1,5 +1,6 @@
 using Isbm2Client.Model;
 using Isbm2Client.Service;
+using Isbm2RestClient.Api;
 
 namespace Isbm2Client.Integration.Test;
 
@@ -18,7 +19,9 @@ public class RestChannelManagementTest : IClassFixture<ConfigFixture>
     [Fact]
     public async Task CreateAndDeleteChannel()
     {
-        var manager = new RestChannelManagement( fixture.Config );
+
+        var channelApi = new ChannelManagementApi( fixture.ApiConfig );
+        var manager = new RestChannelManagement( channelApi );
 
         Assert.NotNull( manager );
 
