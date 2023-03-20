@@ -1,8 +1,6 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
 using RestApi = Isbm2RestClient.Api;
 using RestClient = Isbm2RestClient.Client;
 
@@ -13,10 +11,6 @@ public class PublicationProviderFixture : IAsyncLifetime
     public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/provider/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestPublicationProviderTest class";
 
-    public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
-    {
-        EndPoint = "https://isbm.lab.oiiecosystem.net/rest"
-    });
     public readonly RestClient.Configuration ApiConfig = new()
     {
         BasePath = "https://isbm.lab.oiiecosystem.net/rest"
@@ -36,17 +30,18 @@ public class PublicationProviderFixture : IAsyncLifetime
         {
             PublicationChannel = await management.CreateChannel<PublicationChannel>( CHANNEL_URI, CHANNEL_DESCRIPTION );
         }
-        catch ( ApiException )
+        catch ( RestClient.ApiException )
         {
             var channel = await management.GetChannel(CHANNEL_URI);
 
             PublicationChannel = (PublicationChannel)channel;
         }
 
-        var publicationApi = new RestApi.ProviderPublicationServiceApi(ApiConfig);
+        var providerApi = new RestApi.ProviderPublicationServiceApi(ApiConfig);
+        var consumerApi = new RestApi.ConsumerPublicationServiceApi(ApiConfig);
 
-        Provider = new RestProviderPublication(publicationApi);
-        Consumer = new RestConsumerPublication(Config);
+        Provider = new RestProviderPublication(providerApi);
+        Consumer = new RestConsumerPublication(consumerApi);
     }
 
     public async Task DisposeAsync()
