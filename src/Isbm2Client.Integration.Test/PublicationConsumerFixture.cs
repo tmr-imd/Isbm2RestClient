@@ -41,7 +41,9 @@ public class PublicationConsumerFixture : IAsyncLifetime
             PublicationChannel = (PublicationChannel)channel;
         }
 
-        Provider = new RestProviderPublication(Config);
+        var publicationApi = new RestApi.ProviderPublicationServiceApi(ApiConfig);
+
+        Provider = new RestProviderPublication(publicationApi);
         Consumer = new RestConsumerPublication(Config);
     }
 

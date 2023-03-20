@@ -3,26 +3,17 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
-using RestClient = Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
 public class RestProviderPublication : IProviderPublication
 {
-    private readonly RestApi.ProviderPublicationServiceApi _publicationApi;
+    private readonly RestApi.IProviderPublicationServiceApi _publicationApi;
 
-    public RestProviderPublication(IOptions<ClientConfig> options)
+    public RestProviderPublication( RestApi.IProviderPublicationServiceApi publicationApi )
     {
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = options.Value.EndPoint
-        };
-
-        // TODO: proper configuration
-
-        _publicationApi = new RestApi.ProviderPublicationServiceApi(apiConfig);
+        _publicationApi = publicationApi;
     }
 
     public async Task<PublicationProviderSession> OpenSession(string channelUri)
