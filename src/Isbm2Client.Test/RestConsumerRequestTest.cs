@@ -2,8 +2,9 @@
 using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Isbm2RestClient.Api;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using Moq;
+using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
 
 namespace Isbm2Client.Test;
@@ -16,41 +17,30 @@ public class RestConsumerRequestTest
     private static readonly string BOO_TOPIC = "Boo Topic!";
     private static readonly string EXPIRY = "P1D";
 
-    private readonly RestModel.Session apiSession = new(Guid.NewGuid().ToString(), RestModel.SessionType.RequestConsumer);
-
-    private readonly RestModel.Message apiMessageBoo = new(
-        messageId: Guid.NewGuid().ToString(),
-        messageContent: MessageContent.From(BOO).ToRestMessageContent(),
-        topics: new List<string>() { BOO_TOPIC },
-        expiry: EXPIRY
-    );
-
-    private readonly RestModel.Message apiMessageCarrot = new(
-        messageId: Guid.NewGuid().ToString(),
-        messageContent: MessageContent.From(CARROTS).ToRestMessageContent(),
-        topics: new List<string>() { BOO_TOPIC },
-        expiry: EXPIRY
-    );
-
     [Fact]
     public async Task OpenSession()
     {
-        var mock = new Mock<IConsumerRequestServiceApi>();
+        var apiSession = new RestModel.Session
+        (
+            Guid.NewGuid().ToString(), 
+            RestModel.SessionType.RequestConsumer
+        );
+
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
         mock.Setup(api => api.OpenConsumerRequestSessionAsync(CHANNEL_URI, It.IsAny<RestModel.Session>(), 0, default))
             .ReturnsAsync(apiSession);
 
         var consumer = new RestConsumerRequest( mock.Object );
-        var session = await consumer.OpenSession(CHANNEL_URI);
+        RequestConsumerSession session = await consumer.OpenSession(CHANNEL_URI);
 
         Assert.True(!string.IsNullOrEmpty(session.Id));
         Assert.Equal(apiSession.SessionId, session.Id);
-        Assert.IsType<RequestConsumerSession>(session);
     }
 
     [Fact]
     public async Task CloseSession()
     {
-        var mock = new Mock<IConsumerRequestServiceApi>();
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
         var consumer = new RestConsumerRequest(mock.Object);
 
         var sessionId = Guid.NewGuid().ToString();
@@ -64,16 +54,29 @@ public class RestConsumerRequestTest
     {
         var sessionId = Guid.NewGuid().ToString();
 
-        var mock = new Mock<IConsumerRequestServiceApi>();
+        var apiMessageBoo = new RestModel.Message
+        (
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(BOO).ToRestMessageContent(),
+            topics: new List<string>() { BOO_TOPIC },
+            expiry: EXPIRY
+        );
+
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
         mock.Setup(api => api.PostRequestAsync(sessionId, It.IsAny<RestModel.Message>(), 0, default))
             .ReturnsAsync(apiMessageBoo);
 
         var consumer = new RestConsumerRequest(mock.Object);
 
-        var request = await consumer.PostRequest(sessionId, BOO, BOO_TOPIC, EXPIRY);
+        RequestMessage request = await consumer.PostRequest(sessionId, BOO, BOO_TOPIC, EXPIRY);
 
         Assert.True(!string.IsNullOrEmpty(request.Id));
-        Assert.IsType<RequestMessage>(request);
+        Assert.Equal(apiMessageBoo.MessageId, request.Id);
+
+        var content = request.MessageContent.Deserialise<string>();
+
+        Assert.NotNull(content);
+        Assert.Contains(BOO, content);
     }
 
     [Fact]
@@ -82,21 +85,25 @@ public class RestConsumerRequestTest
         var sessionId = Guid.NewGuid().ToString();
         var requestId = Guid.NewGuid().ToString();
 
-        var mock = new Mock<IConsumerRequestServiceApi>();
+        var apiMessageCarrot = new RestModel.Message
+        (
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(CARROTS).ToRestMessageContent(),
+            topics: new List<string>() { BOO_TOPIC },
+            expiry: EXPIRY
+        );
+
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
         mock.Setup(api => api.ReadResponseAsync(sessionId, requestId, 0, default))
             .ReturnsAsync(apiMessageCarrot);
 
         var consumer = new RestConsumerRequest(mock.Object);
 
-        var response = await consumer.ReadResponse(sessionId, requestId);
+        ResponseMessage response = await consumer.ReadResponse(sessionId, requestId);
 
         Assert.True(!string.IsNullOrEmpty(response.Id));
-        Assert.IsType<ResponseMessage>(response);
-        Assert.Equal( response.RequestMessageId, requestId );
-
-        await consumer.RemoveResponse(sessionId, requestId);
-
-        mock.Verify( api => api.RemoveResponseAsync(sessionId, requestId, 0, default), Times.Exactly(1));
+        Assert.Equal( apiMessageCarrot.MessageId, response.Id );
+        Assert.Equal( requestId, response.RequestMessageId );
 
         var content = response.MessageContent.Deserialise<string>();
 
@@ -105,12 +112,26 @@ public class RestConsumerRequestTest
     }
 
     [Fact]
+    public async Task RemoveResponse()
+    {
+        var sessionId = Guid.NewGuid().ToString();
+        var requestId = Guid.NewGuid().ToString();
+
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
+        var consumer = new RestConsumerRequest(mock.Object);
+
+        await consumer.RemoveResponse(sessionId, requestId);
+
+        mock.Verify(api => api.RemoveResponseAsync(sessionId, requestId, 0, default), Times.Exactly(1));
+    }
+
+    [Fact]
     public async Task ExpirePublication()
     {
         var sessionId = Guid.NewGuid().ToString();
         var messageId = Guid.NewGuid().ToString();
 
-        var mock = new Mock<IConsumerRequestServiceApi>();
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
 
         var consumer = new RestConsumerRequest(mock.Object);
         await consumer.ExpireRequest(sessionId, messageId);
