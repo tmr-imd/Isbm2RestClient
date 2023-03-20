@@ -1,7 +1,7 @@
 ﻿using Isbm2Client.Model;
 using System.Text.Json;
 
-namespace Isbm2Client.Integration.Test;
+namespace Isbm2Client.Test;
 
 public class MessageContentTest
 {
