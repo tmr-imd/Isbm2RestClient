@@ -15,15 +15,15 @@ public class RestConsumerPublicationTest
     private static readonly string YO = "Yo!";
     private static readonly string YO_TOPIC = "Yo Topic!";
 
-    private RestModel.Session apiSession => new
-    (
-        Guid.NewGuid().ToString(), 
-        RestModel.SessionType.PublicationConsumer
-    );
-
     [Fact]
     public async Task OpenSession()
     {
+        var apiSession = new RestModel.Session
+        (
+            Guid.NewGuid().ToString(), 
+            RestModel.SessionType.PublicationConsumer
+        );
+
         var mock = new Mock<RestApi.IConsumerPublicationServiceApi>();
         mock.Setup( api => api.OpenSubscriptionSessionAsync(CHANNEL_URI, It.IsAny<RestModel.Session>(), 0, default) )
             .ReturnsAsync( apiSession );
@@ -34,6 +34,7 @@ public class RestConsumerPublicationTest
 
         Assert.True(!string.IsNullOrEmpty(session.Id));
         Assert.IsType<PublicationConsumerSession>(session);
+        Assert.Equal(apiSession.SessionId, session.Id );
     }
 
     [Fact]
