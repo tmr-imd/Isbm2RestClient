@@ -1,16 +1,16 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using RestModel = Isbm2RestClient.Model;
+using RestApi = Isbm2RestClient.Api;
 using Isbm2Client.Extensions;
-using Isbm2RestClient.Api;
 
 namespace Isbm2Client.Service;
 
 public class RestConsumerRequest : AbstractRestService, IConsumerRequest
 {
-    private readonly IConsumerRequestServiceApi _requestApi;
+    private readonly RestApi.IConsumerRequestServiceApi _requestApi;
 
-    public RestConsumerRequest( IConsumerRequestServiceApi requestApi )
+    public RestConsumerRequest(RestApi.IConsumerRequestServiceApi requestApi )
     {
         _requestApi = requestApi;
         _requestApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;

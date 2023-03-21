@@ -3,32 +3,23 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
-using RestClient = Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
 public class RestProviderPublication : AbstractRestService, IProviderPublication
 {
-    private readonly RestApi.ProviderPublicationServiceApi _publicationApi;
+    private readonly RestApi.IProviderPublicationServiceApi _providerApi;
 
-    public RestProviderPublication(IOptions<ClientConfig> options)
+    public RestProviderPublication( RestApi.IProviderPublicationServiceApi providerApi )
     {
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = options.Value.EndPoint
-        };
-
-        // TODO: proper configuration
-
-        _publicationApi = new RestApi.ProviderPublicationServiceApi(apiConfig);
-        _publicationApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
+        _providerApi = providerApi;
+        _providerApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<PublicationProviderSession> OpenSession(string channelUri)
     {
-        var session = await ProtectedApiCallAsync( async () =>  await _publicationApi.OpenPublicationSessionAsync( channelUri ) );
+        var session = await ProtectedApiCallAsync( async () =>  await _providerApi.OpenPublicationSessionAsync( channelUri ) );
 
         return new PublicationProviderSession( session.SessionId );
     }
@@ -51,18 +42,18 @@ public class RestProviderPublication : AbstractRestService, IProviderPublication
             expiry: expiry
         );
 
-        var message = await ProtectedApiCallAsync( async () => await _publicationApi.PostPublicationAsync( sessionId, restMessage ) );
+        var message = await ProtectedApiCallAsync( async () => await _providerApi.PostPublicationAsync( sessionId, restMessage ) );
 
         return new PublicationMessage( message.MessageId, messageContent, topics.ToArray(), expiry );
     }
 
     public async Task ExpirePublication(string sessionId, string messageId)
     {
-        await ProtectedApiCallAsync( async () => await _publicationApi.ExpirePublicationAsync( sessionId, messageId ) );
+        await ProtectedApiCallAsync( async () => await _providerApi.ExpirePublicationAsync( sessionId, messageId ) );
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await ProtectedApiCallAsync( async () => await _publicationApi.CloseSessionAsync(sessionId) );
+        await ProtectedApiCallAsync( async () => await _providerApi.CloseSessionAsync(sessionId) );
     }
 }

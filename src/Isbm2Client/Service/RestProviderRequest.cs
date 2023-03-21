@@ -3,26 +3,17 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
-using RestClient = Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
 public class RestProviderRequest : AbstractRestService, IProviderRequest
 {
-    private readonly RestApi.ProviderRequestServiceApi _requestApi;
+    private readonly RestApi.IProviderRequestServiceApi _requestApi;
 
-    public RestProviderRequest(IOptions<ClientConfig> options)
+    public RestProviderRequest(RestApi.IProviderRequestServiceApi requestApi)
     {
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = options.Value.EndPoint
-        };
-
-        // TODO: proper configuration
-
-        _requestApi = new RestApi.ProviderRequestServiceApi(apiConfig);
+        _requestApi = requestApi;
         _requestApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 

@@ -1,8 +1,8 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
+using RestApi = Isbm2RestClient.Api;
+using RestClient = Isbm2RestClient.Client;
 
 namespace Isbm2Client.Integration.Test;
 
@@ -11,10 +11,11 @@ public class PublicationProviderFixture : IAsyncLifetime
     public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/provider/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestPublicationProviderTest class";
 
-    public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
+    public readonly RestClient.Configuration ApiConfig = new()
     {
-        EndPoint = "https://isbm.lab.oiiecosystem.net/rest"
-    });
+        BasePath = "https://isbm.lab.oiiecosystem.net/rest"
+    };
+
 
     public PublicationChannel PublicationChannel { get; set; } = null!;
     public IProviderPublication Provider { get; set; } = null!;
@@ -22,7 +23,8 @@ public class PublicationProviderFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         try
         {
@@ -35,13 +37,17 @@ public class PublicationProviderFixture : IAsyncLifetime
             PublicationChannel = (PublicationChannel)channel;
         }
 
-        Provider = new RestProviderPublication(Config);
-        Consumer = new RestConsumerPublication(Config);
+        var providerApi = new RestApi.ProviderPublicationServiceApi(ApiConfig);
+        var consumerApi = new RestApi.ConsumerPublicationServiceApi(ApiConfig);
+
+        Provider = new RestProviderPublication(providerApi);
+        Consumer = new RestConsumerPublication(consumerApi);
     }
 
     public async Task DisposeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         await management.DeleteChannel(CHANNEL_URI);
     }
