@@ -5,7 +5,7 @@ using Isbm2RestClient.Client;
 namespace Isbm2Client.Integration.Test;
 
 [Collection("Request Consumer collection")]
-public class RestConsumerRequestTest
+public class RequestConsumerTest
 {
     private readonly RequestChannel channel;
     private readonly IConsumerRequest consumer;
@@ -15,7 +15,7 @@ public class RestConsumerRequestTest
     private static readonly string BOO_TOPIC = "Boo Topic!";
     private static readonly string EXPIRY = "P1D";
 
-    public RestConsumerRequestTest( RequestConsumerFixture fixture )
+    public RequestConsumerTest( RequestConsumerFixture fixture )
     {
         channel = fixture.RequestChannel;
         provider = fixture.Provider;

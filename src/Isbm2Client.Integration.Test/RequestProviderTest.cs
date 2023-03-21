@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace Isbm2Client.Integration.Test;
 
 [Collection("Request Provider collection")]
-public class RestProviderRequestTest
+public class RequestProviderTest
 {
     private readonly RequestChannel channel;
     private readonly IConsumerRequest consumer;
@@ -15,7 +15,7 @@ public class RestProviderRequestTest
     private static readonly string YO = "Yo!";
     private static readonly string YO_TOPIC = "Yo Topic!";
 
-    public RestProviderRequestTest( RequestProviderFixture fixture )
+    public RequestProviderTest( RequestProviderFixture fixture )
     {
         channel = fixture.RequestChannel;
         provider = fixture.Provider;

@@ -8,7 +8,7 @@ using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Test;
 
-public class RestConsumerPublicationTest
+public class PubSubConsumerTest
 {
     public const string CHANNEL_URI = "/pubsub/consumer";
 

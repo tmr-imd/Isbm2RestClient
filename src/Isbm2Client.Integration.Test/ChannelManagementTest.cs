@@ -4,14 +4,14 @@ using Isbm2RestClient.Api;
 
 namespace Isbm2Client.Integration.Test;
 
-public class RestChannelManagementTest : IClassFixture<ConfigFixture>
+public class ChannelManagementTest : IClassFixture<ConfigFixture>
 {
     public const string CHANNEL_URI = "/pittsh/test/general";
     public const string CHANNEL_DESCRIPTION = "fred";
 
     private readonly ConfigFixture fixture;
 
-    public RestChannelManagementTest( ConfigFixture fixture )
+    public ChannelManagementTest( ConfigFixture fixture )
     {
         this.fixture = fixture;
     }
