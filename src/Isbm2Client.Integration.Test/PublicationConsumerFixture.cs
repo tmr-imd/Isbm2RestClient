@@ -12,10 +12,6 @@ public class PublicationConsumerFixture : IAsyncLifetime
     public readonly string CHANNEL_URI = $"/isbm2restclient/test/publication/consumer/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestPublicationConsumerTest class";
 
-    public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
-    {
-        EndPoint = "https://isbm.lab.oiiecosystem.net/rest"
-    });
     public readonly RestClient.Configuration ApiConfig = new()
     {
         BasePath = "https://isbm.lab.oiiecosystem.net/rest"
@@ -41,8 +37,11 @@ public class PublicationConsumerFixture : IAsyncLifetime
             PublicationChannel = (PublicationChannel)channel;
         }
 
-        Provider = new RestProviderPublication(Config);
-        Consumer = new RestConsumerPublication(Config);
+        var providerApi = new RestApi.ProviderPublicationServiceApi(ApiConfig);
+        var consumerApi = new RestApi.ConsumerPublicationServiceApi(ApiConfig);
+
+        Provider = new RestProviderPublication(providerApi);
+        Consumer = new RestConsumerPublication(consumerApi);
     }
 
     public async Task DisposeAsync()

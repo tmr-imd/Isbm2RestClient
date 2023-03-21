@@ -10,8 +10,6 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<StructureAssetService>();
 
-builder.Services.Configure<ClientConfig>(builder.Configuration.GetSection("Isbm"));
-
 var clientConfig = builder.Configuration.GetSection("Isbm").Get<ClientConfig>();
 builder.Services.AddIsbmRestClient( clientConfig );
 

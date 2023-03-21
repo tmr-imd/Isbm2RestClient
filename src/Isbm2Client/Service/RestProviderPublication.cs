@@ -3,31 +3,22 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
-using RestClient = Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
 public class RestProviderPublication : IProviderPublication
 {
-    private readonly RestApi.ProviderPublicationServiceApi _publicationApi;
+    private readonly RestApi.IProviderPublicationServiceApi _providerApi;
 
-    public RestProviderPublication(IOptions<ClientConfig> options)
+    public RestProviderPublication( RestApi.IProviderPublicationServiceApi providerApi )
     {
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = options.Value.EndPoint
-        };
-
-        // TODO: proper configuration
-
-        _publicationApi = new RestApi.ProviderPublicationServiceApi(apiConfig);
+        _providerApi = providerApi;
     }
 
     public async Task<PublicationProviderSession> OpenSession(string channelUri)
     {
-        var session = await _publicationApi.OpenPublicationSessionAsync( channelUri );
+        var session = await _providerApi.OpenPublicationSessionAsync( channelUri );
 
         if ( session is null ) throw new Exception( "Uh oh" );
 
@@ -52,18 +43,18 @@ public class RestProviderPublication : IProviderPublication
             expiry: expiry
         );
 
-        var message = await _publicationApi.PostPublicationAsync( sessionId, restMessage );
+        var message = await _providerApi.PostPublicationAsync( sessionId, restMessage );
 
         return new PublicationMessage( message.MessageId, messageContent, topics.ToArray(), expiry );
     }
 
     public async Task ExpirePublication(string sessionId, string messageId)
     {
-        await _publicationApi.ExpirePublicationAsync( sessionId, messageId );
+        await _providerApi.ExpirePublicationAsync( sessionId, messageId );
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await _publicationApi.CloseSessionAsync(sessionId);
+        await _providerApi.CloseSessionAsync(sessionId);
     }
 }

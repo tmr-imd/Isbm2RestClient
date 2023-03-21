@@ -3,26 +3,16 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
-using RestClient = Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
-using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
 public class RestConsumerPublication : IConsumerPublication
 {
-    private readonly RestApi.ConsumerPublicationServiceApi _publicationApi;
+    private readonly RestApi.IConsumerPublicationServiceApi _consumerApi;
 
-    public RestConsumerPublication(IOptions<ClientConfig> options)
+    public RestConsumerPublication(RestApi.IConsumerPublicationServiceApi consumerApi)
     {
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = options.Value.EndPoint
-        };
-
-        // TODO: proper configuration
-
-        _publicationApi = new RestApi.ConsumerPublicationServiceApi(apiConfig);
+        _consumerApi = consumerApi;
     }
 
     public async Task<PublicationConsumerSession> OpenSession(string channelUri, string topic, string? listenerUri = null)
@@ -41,7 +31,7 @@ public class RestConsumerPublication : IConsumerPublication
             ListenerUrl = listenerUri,
         };
 
-        var session = await _publicationApi.OpenSubscriptionSessionAsync( channelUri, sessionParams );
+        var session = await _consumerApi.OpenSubscriptionSessionAsync( channelUri, sessionParams );
 
         if ( session is null ) throw new Exception( "Uh oh" );
 
@@ -50,7 +40,7 @@ public class RestConsumerPublication : IConsumerPublication
 
     public async Task<PublicationMessage> ReadPublication(string sessionId)
     {
-        var response = await _publicationApi.ReadPublicationAsync( sessionId );
+        var response = await _consumerApi.ReadPublicationAsync( sessionId );
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = Model.MessageContent.From( content );
 
@@ -59,11 +49,11 @@ public class RestConsumerPublication : IConsumerPublication
 
     public async Task RemovePublication(string sessionId)
     {
-        await _publicationApi.RemovePublicationAsync(sessionId);
+        await _consumerApi.RemovePublicationAsync(sessionId);
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await _publicationApi.CloseSessionAsync(sessionId);
+        await _consumerApi.CloseSessionAsync(sessionId);
     }
 }
