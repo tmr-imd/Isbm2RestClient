@@ -1,8 +1,6 @@
 ﻿using Isbm2Client.Extensions;
-using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using Moq;
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
