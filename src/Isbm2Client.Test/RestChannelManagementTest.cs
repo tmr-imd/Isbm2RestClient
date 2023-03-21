@@ -26,6 +26,8 @@ public class RestChannelManagementTest
         var channel = await manager.CreateChannel<RequestChannel>(CHANNEL_URI, CHANNEL_DESCRIPTION);
 
         Assert.IsType<RequestChannel>(channel);
+        Assert.Equal(CHANNEL_URI, channel.Uri);
+        Assert.Equal(CHANNEL_DESCRIPTION, channel.Description);
     }
 
     [Fact]
