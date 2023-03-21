@@ -1,28 +1,18 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
-
-using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
-using RestClient = Isbm2RestClient.Client;
-using Microsoft.Extensions.Options;
 using Isbm2Client.Extensions;
+using Isbm2RestClient.Api;
 
 namespace Isbm2Client.Service;
 
 public class RestConsumerRequest : IConsumerRequest
 {
-    private readonly RestApi.ConsumerRequestServiceApi _requestApi;
+    private readonly IConsumerRequestServiceApi _requestApi;
 
-    public RestConsumerRequest(IOptions<ClientConfig> options)
+    public RestConsumerRequest( IConsumerRequestServiceApi requestApi )
     {
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = options.Value.EndPoint
-        };
-
-        // TODO: proper configuration
-
-        _requestApi = new RestApi.ConsumerRequestServiceApi(apiConfig);
+        _requestApi = requestApi;
     }
 
     public async Task<RequestConsumerSession> OpenSession( string channelUri )

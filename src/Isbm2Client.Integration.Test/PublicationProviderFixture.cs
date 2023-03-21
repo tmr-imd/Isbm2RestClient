@@ -4,7 +4,7 @@ using Isbm2Client.Service;
 using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Integration.Test;
 
 public class PublicationProviderFixture : IAsyncLifetime
 {

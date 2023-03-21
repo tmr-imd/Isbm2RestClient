@@ -1,105 +1,141 @@
+﻿using Isbm2Client.Extensions;
 using Isbm2Client.Interface;
 using Isbm2Client.Model;
-using Isbm2RestClient.Client;
+using Isbm2Client.Service;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
+using Moq;
+using RestApi = Isbm2RestClient.Api;
+using RestModel = Isbm2RestClient.Model;
 
 namespace Isbm2Client.Test;
 
-[Collection("Request Consumer collection")]
 public class RestConsumerRequestTest
 {
-    private readonly RequestChannel channel;
-    private readonly IConsumerRequest consumer;
-    private readonly IProviderRequest provider;
-
+    private static readonly string CHANNEL_URI = "/request/consumer";
+    private static readonly string CARROTS = "Carrots!";
     private static readonly string BOO = "Boo!";
     private static readonly string BOO_TOPIC = "Boo Topic!";
     private static readonly string EXPIRY = "P1D";
 
-    public RestConsumerRequestTest( RequestConsumerFixture fixture )
+    [Fact]
+    public async Task OpenSession()
     {
-        channel = fixture.RequestChannel;
-        provider = fixture.Provider;
-        consumer = fixture.Consumer;
+        var apiSession = new RestModel.Session
+        (
+            Guid.NewGuid().ToString(), 
+            RestModel.SessionType.RequestConsumer
+        );
+
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
+        mock.Setup(api => api.OpenConsumerRequestSessionAsync(CHANNEL_URI, It.IsAny<RestModel.Session>(), 0, default))
+            .ReturnsAsync(apiSession);
+
+        var consumer = new RestConsumerRequest( mock.Object );
+        RequestConsumerSession session = await consumer.OpenSession(CHANNEL_URI);
+
+        Assert.True(!string.IsNullOrEmpty(session.Id));
+        Assert.Equal(apiSession.SessionId, session.Id);
     }
 
     [Fact]
-    public async Task OpenAndCloseSession()
+    public async Task CloseSession()
     {
-        RequestConsumerSession session = await consumer.OpenSession( channel.Uri );
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
+        var consumer = new RestConsumerRequest(mock.Object);
 
-        await consumer.CloseSession( session.Id );
-    }
+        var sessionId = Guid.NewGuid().ToString();
+        await consumer.CloseSession(sessionId);
 
-    [Fact]
-    public async Task CantCloseSessionTwice()
-    {
-        RequestConsumerSession session = await consumer.OpenSession( channel.Uri);
-
-        await consumer.CloseSession(session.Id);
-
-        Task closeAgain() => consumer.CloseSession(session.Id);
-
-        await Assert.ThrowsAsync<ApiException>(closeAgain);
+        mock.Verify(api => api.CloseSessionAsync(sessionId, 0, default), Times.Exactly(1));
     }
 
     [Fact]
     public async Task PostRequest()
     {
-        RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
+        var sessionId = Guid.NewGuid().ToString();
 
-        _ = await consumer.PostRequest( session.Id, BOO, BOO_TOPIC, EXPIRY );
+        var apiMessageBoo = new RestModel.Message
+        (
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(BOO).ToRestMessageContent(),
+            topics: new List<string>() { BOO_TOPIC },
+            expiry: EXPIRY
+        );
 
-        await consumer.CloseSession( session.Id );
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
+        mock.Setup(api => api.PostRequestAsync(sessionId, It.IsAny<RestModel.Message>(), 0, default))
+            .ReturnsAsync(apiMessageBoo);
+
+        var consumer = new RestConsumerRequest(mock.Object);
+
+        RequestMessage request = await consumer.PostRequest(sessionId, BOO, BOO_TOPIC, EXPIRY);
+
+        Assert.True(!string.IsNullOrEmpty(request.Id));
+        Assert.Equal(apiMessageBoo.MessageId, request.Id);
+
+        var content = request.MessageContent.Deserialise<string>();
+
+        Assert.NotNull(content);
+        Assert.Contains(BOO, content);
     }
 
     [Fact]
-    public async Task PostRequestReadResponse()
+    public async Task ReadResponse()
     {
-        var providerSession = await provider.OpenSession(channel.Uri, BOO_TOPIC);
-        var consumerSession = await consumer.OpenSession(channel.Uri);
+        var sessionId = Guid.NewGuid().ToString();
+        var requestId = Guid.NewGuid().ToString();
 
-        try
-        {
-            await consumer.PostRequest(consumerSession.Id, BOO, BOO_TOPIC, EXPIRY);
+        var apiMessageCarrot = new RestModel.Message
+        (
+            messageId: Guid.NewGuid().ToString(),
+            messageContent: MessageContent.From(CARROTS).ToRestMessageContent(),
+            topics: new List<string>() { BOO_TOPIC },
+            expiry: EXPIRY
+        );
 
-            var requestMessage = await provider.ReadRequest(providerSession.Id);
-            await provider.RemoveRequest( providerSession.Id );
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
+        mock.Setup(api => api.ReadResponseAsync(sessionId, requestId, 0, default))
+            .ReturnsAsync(apiMessageCarrot);
 
-            var requestContent = requestMessage.MessageContent.Deserialise<string>();
+        var consumer = new RestConsumerRequest(mock.Object);
 
-            Assert.True(requestContent == BOO);
+        ResponseMessage response = await consumer.ReadResponse(sessionId, requestId);
 
-            var responseMessage = await provider.PostResponse(providerSession.Id, requestMessage.Id, "Carrots!");
+        Assert.True(!string.IsNullOrEmpty(response.Id));
+        Assert.Equal( apiMessageCarrot.MessageId, response.Id );
+        Assert.Equal( requestId, response.RequestMessageId );
 
-            Assert.NotNull( responseMessage );
-            Assert.Contains("Carrots", responseMessage.MessageContent.Deserialise<string>());
+        var content = response.MessageContent.Deserialise<string>();
 
-            var message = await consumer.ReadResponse( consumerSession.Id, requestMessage.Id );
-            await consumer.RemoveResponse( consumerSession.Id, requestMessage.Id );
+        Assert.NotNull(content);
+        Assert.Contains(CARROTS, content);
+    }
 
-            var content = message.MessageContent.Deserialise<string>();
+    [Fact]
+    public async Task RemoveResponse()
+    {
+        var sessionId = Guid.NewGuid().ToString();
+        var requestId = Guid.NewGuid().ToString();
 
-            Assert.NotNull(content);
-            Assert.Contains("Carrots!", content);
-        }
-        finally
-        {
-            await consumer.CloseSession(consumerSession.Id);
-            await provider.CloseSession(providerSession.Id);
-        }
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
+        var consumer = new RestConsumerRequest(mock.Object);
+
+        await consumer.RemoveResponse(sessionId, requestId);
+
+        mock.Verify(api => api.RemoveResponseAsync(sessionId, requestId, 0, default), Times.Exactly(1));
     }
 
     [Fact]
     public async Task ExpirePublication()
     {
-        RequestConsumerSession session = await consumer.OpenSession(channel.Uri);
+        var sessionId = Guid.NewGuid().ToString();
+        var messageId = Guid.NewGuid().ToString();
 
-        Message message = await consumer.PostRequest(session.Id, BOO, BOO_TOPIC);
+        var mock = new Mock<RestApi.IConsumerRequestServiceApi>();
 
-        Assert.NotEmpty(message.Id);
+        var consumer = new RestConsumerRequest(mock.Object);
+        await consumer.ExpireRequest(sessionId, messageId);
 
-        await consumer.ExpireRequest( session.Id, message.Id );
-
-        await provider.CloseSession( session.Id );
+        mock.Verify(api => api.ExpireRequestAsync(sessionId, messageId, 0, default), Times.Exactly(1));
     }
 }

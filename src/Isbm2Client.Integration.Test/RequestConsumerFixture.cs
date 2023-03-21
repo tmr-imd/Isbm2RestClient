@@ -1,15 +1,17 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
+using Isbm2RestClient.Api;
 using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using RestClient = Isbm2RestClient.Client;
 
-namespace Isbm2Client.Test;
+namespace Isbm2Client.Integration.Test;
 
-public class RequestProviderFixture : IAsyncLifetime
+public class RequestConsumerFixture : IAsyncLifetime
 {
-    public readonly string CHANNEL_URI = $"/pittsh/test/request/provider/{Guid.NewGuid()}";
-    public const string CHANNEL_DESCRIPTION = "For RestRequestProviderTest class";
+    public readonly string CHANNEL_URI = $"/pittsh/test/request/consumer/{Guid.NewGuid()}";
+    public const string CHANNEL_DESCRIPTION = "For RestRequestConsumerTest class";
 
     public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
     {
@@ -35,8 +37,15 @@ public class RequestProviderFixture : IAsyncLifetime
             RequestChannel = (RequestChannel)channel;
         }
 
+        RestClient.Configuration apiConfig = new()
+        {
+            BasePath = Config.Value.EndPoint
+        };
+
+        var requestApi = new ConsumerRequestServiceApi(apiConfig);
+
         Provider = new RestProviderRequest(Config);
-        Consumer = new RestConsumerRequest(Config);
+        Consumer = new RestConsumerRequest(requestApi);
     }
 
     public async Task DisposeAsync()
@@ -48,8 +57,8 @@ public class RequestProviderFixture : IAsyncLifetime
     }
 }
 
-[CollectionDefinition("Request Provider collection")]
-public class RequestProviderCollection : ICollectionFixture<RequestProviderFixture>
+[CollectionDefinition("Request Consumer collection")]
+public class RequestConsumerCollection : ICollectionFixture<RequestConsumerFixture>
 {
     // This class has no code, and is never created. Its purpose is simply
     // to be the place to apply [CollectionDefinition] and all the
