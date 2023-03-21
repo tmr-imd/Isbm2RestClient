@@ -3,6 +3,8 @@ using Isbm2Client.Model;
 using Isbm2Client.Service;
 using Isbm2RestClient.Client;
 using Microsoft.Extensions.Options;
+using RestApi = Isbm2RestClient.Api;
+using RestClient = Isbm2RestClient.Client;
 
 namespace Isbm2Client.Integration.Test;
 
@@ -15,6 +17,11 @@ public class PublicationProviderFixture : IAsyncLifetime
     {
         EndPoint = "https://isbm.lab.oiiecosystem.net/rest"
     });
+    public readonly RestClient.Configuration ApiConfig = new()
+    {
+        BasePath = "https://isbm.lab.oiiecosystem.net/rest"
+    };
+
 
     public PublicationChannel PublicationChannel { get; set; } = null!;
     public IProviderPublication Provider { get; set; } = null!;
@@ -22,7 +29,8 @@ public class PublicationProviderFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         try
         {
@@ -41,7 +49,8 @@ public class PublicationProviderFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         await management.DeleteChannel(CHANNEL_URI);
     }

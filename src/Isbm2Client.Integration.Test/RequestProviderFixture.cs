@@ -1,7 +1,6 @@
 ﻿using Isbm2Client.Interface;
 using Isbm2Client.Model;
 using Isbm2Client.Service;
-using Microsoft.Extensions.Options;
 using RestClient = Isbm2RestClient.Client;
 using RestApi = Isbm2RestClient.Api;
 
@@ -12,10 +11,10 @@ public class RequestProviderFixture : IAsyncLifetime
     public readonly string CHANNEL_URI = $"/pittsh/test/request/provider/{Guid.NewGuid()}";
     public const string CHANNEL_DESCRIPTION = "For RestRequestProviderTest class";
 
-    public readonly IOptions<ClientConfig> Config = Options.Create( new ClientConfig() 
+    public readonly RestClient.Configuration ApiConfig = new()
     {
-        EndPoint = "https://isbm.lab.oiiecosystem.net/rest"
-    });
+        BasePath = "https://isbm.lab.oiiecosystem.net/rest"
+    };
 
     public RequestChannel RequestChannel { get; set; } = null!;
     public IProviderRequest Provider { get; set; } = null!;
@@ -23,7 +22,8 @@ public class RequestProviderFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         try
         {
@@ -36,13 +36,8 @@ public class RequestProviderFixture : IAsyncLifetime
             RequestChannel = (RequestChannel)channel;
         }
 
-        RestClient.Configuration apiConfig = new()
-        {
-            BasePath = Config.Value.EndPoint
-        };
-
-        var providerApi = new RestApi.ProviderRequestServiceApi( apiConfig );
-        var consumerApi = new RestApi.ConsumerRequestServiceApi( apiConfig );
+        var providerApi = new RestApi.ProviderRequestServiceApi( ApiConfig );
+        var consumerApi = new RestApi.ConsumerRequestServiceApi( ApiConfig );
 
         Provider = new RestProviderRequest(providerApi);
         Consumer = new RestConsumerRequest(consumerApi);
@@ -50,8 +45,8 @@ public class RequestProviderFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        // await Task.Yield();
-        var management = new RestChannelManagement(Config);
+        var channelApi = new RestApi.ChannelManagementApi(ApiConfig);
+        var management = new RestChannelManagement(channelApi);
 
         await management.DeleteChannel(CHANNEL_URI);
     }
