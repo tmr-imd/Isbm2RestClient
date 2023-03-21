@@ -57,7 +57,7 @@ public class RestConsumerPublicationTest
             await consumer.RemovePublication( consumerSession.Id );
 
             Assert.NotNull(message);
-            Assert.NotEmpty(message?.Id);
+            Assert.False(String.IsNullOrWhiteSpace(message?.Id));
 
             var content = message?.MessageContent.Deserialise<string>();
 
