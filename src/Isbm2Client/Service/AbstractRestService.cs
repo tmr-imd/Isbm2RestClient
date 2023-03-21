@@ -32,7 +32,7 @@ public abstract class AbstractRestService
 
         var instance = Activator.CreateInstance(type, args);
 
-        if ( instance is null ) throw new Exception($"Activator.CreateInstance({typeof(T).Name},...) unexpectedly returned null. This should not happen");
+        if ( instance is null ) throw new NullReferenceException($"Activator.CreateInstance({typeof(T).Name},...) unexpectedly returned null. This should not happen");
 
         return (T)instance;
     }
