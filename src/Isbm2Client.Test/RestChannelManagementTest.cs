@@ -11,7 +11,7 @@ public class RestChannelManagementTest
     public const string CHANNEL_URI = "/channel/request";
     public const string CHANNEL_DESCRIPTION = "fred";
 
-    private readonly RestModel.Channel apiChannel = new(CHANNEL_URI, RestModel.ChannelType.Request);
+    private readonly RestModel.Channel apiChannel = new(CHANNEL_URI, RestModel.ChannelType.Request, CHANNEL_DESCRIPTION);
 
     [Fact]
     public async Task CreateChannel()

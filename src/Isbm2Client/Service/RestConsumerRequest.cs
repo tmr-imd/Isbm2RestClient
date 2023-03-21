@@ -6,13 +6,14 @@ using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
-public class RestConsumerRequest : IConsumerRequest
+public class RestConsumerRequest : AbstractRestService, IConsumerRequest
 {
     private readonly RestApi.IConsumerRequestServiceApi _requestApi;
 
     public RestConsumerRequest(RestApi.IConsumerRequestServiceApi requestApi )
     {
         _requestApi = requestApi;
+        _requestApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<RequestConsumerSession> OpenSession( string channelUri )
@@ -22,9 +23,7 @@ public class RestConsumerRequest : IConsumerRequest
             SessionType = RestModel.SessionType.RequestConsumer
         };
 
-        var session = await _requestApi.OpenConsumerRequestSessionAsync( channelUri, sessionParams );
-
-        if ( session is null ) throw new Exception( "Uh oh" );
+        var session = await ProtectedApiCallAsync( async () => await _requestApi.OpenConsumerRequestSessionAsync( channelUri, sessionParams ) );
 
         return new RequestConsumerSession( session.SessionId, sessionParams.ListenerUrl );
     }
@@ -37,9 +36,7 @@ public class RestConsumerRequest : IConsumerRequest
             ListenerUrl = listenerUri
         };
 
-        var session = await _requestApi.OpenConsumerRequestSessionAsync(channelUri, sessionParams);
-
-        if ( session is null ) throw new Exception("Uh oh");
+        var session = await ProtectedApiCallAsync( async () => await _requestApi.OpenConsumerRequestSessionAsync(channelUri, sessionParams) );
 
         return new RequestConsumerSession(session.SessionId, sessionParams.ListenerUrl);
     }
@@ -62,7 +59,7 @@ public class RestConsumerRequest : IConsumerRequest
             expiry: expiry
         );
 
-        var message = await _requestApi.PostRequestAsync( sessionId, restMessage );
+        var message = await ProtectedApiCallAsync( async () => await _requestApi.PostRequestAsync( sessionId, restMessage ) );
 
         return new RequestMessage( message.MessageId, messageContent, topics.ToArray(), "" );
     }
@@ -72,9 +69,11 @@ public class RestConsumerRequest : IConsumerRequest
         await _requestApi.ExpireRequestAsync( sessionId, messageId );
     }
 
-    public async Task<ResponseMessage> ReadResponse(string sessionId, string requestMessageId)
+    public async Task<ResponseMessage?> ReadResponse(string sessionId, string requestMessageId)
     {
-        var response = await _requestApi.ReadResponseAsync( sessionId, requestMessageId );
+        var response = await ProtectedApiCallAsync( async () => await _requestApi.ReadResponseAsync( sessionId, requestMessageId ) );
+        if (response.NotFound()) return null;
+
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = Model.MessageContent.From( content );
 
@@ -83,11 +82,11 @@ public class RestConsumerRequest : IConsumerRequest
 
     public async Task RemoveResponse( string sessionId, string requestId )
     {
-        await _requestApi.RemoveResponseAsync( sessionId, requestId );
+        await ProtectedApiCallAsync( async () => await _requestApi.RemoveResponseAsync( sessionId, requestId ) );
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await _requestApi.CloseSessionAsync(sessionId);
+        await ProtectedApiCallAsync( async () =>  await _requestApi.CloseSessionAsync(sessionId) );
     }
 }

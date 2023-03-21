@@ -18,4 +18,25 @@ public static class MessageContentExtensions
         );
 #pragma warning restore CS8604 // Possible null reference argument.
     }
+
+    /// <summary>
+    /// Returns true if the RestModel.Message is actually a deserialized NotFound fault.
+    /// </summary>
+    /// <remarks>
+    /// This occurs as the JSON schema for Message is flexible for different uses and
+    /// future extensions, so an empty content successfully deserializes while "fault"
+    /// content succesffuly deserializes as additional properties.
+    /// </remarks>
+    /// <returns>true if it is an empty or "fault" resut of NotFound</returns>
+    public static bool NotFound( this RestModel.Message message)
+    {
+        return message.AdditionalProperties.ContainsKey("fault") || (
+            message.MessageId is null
+            && message.MessageContent is null
+            && message.MessageType is null
+            && message.Topics is null
+            && message.Expiry is null
+            && message.RequestMessageId is null
+        );
+    }
 }

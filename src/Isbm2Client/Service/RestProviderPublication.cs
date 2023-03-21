@@ -7,20 +7,19 @@ using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
-public class RestProviderPublication : IProviderPublication
+public class RestProviderPublication : AbstractRestService, IProviderPublication
 {
     private readonly RestApi.IProviderPublicationServiceApi _providerApi;
 
     public RestProviderPublication( RestApi.IProviderPublicationServiceApi providerApi )
     {
         _providerApi = providerApi;
+        _providerApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<PublicationProviderSession> OpenSession(string channelUri)
     {
-        var session = await _providerApi.OpenPublicationSessionAsync( channelUri );
-
-        if ( session is null ) throw new Exception( "Uh oh" );
+        var session = await ProtectedApiCallAsync( async () =>  await _providerApi.OpenPublicationSessionAsync( channelUri ) );
 
         return new PublicationProviderSession( session.SessionId );
     }
@@ -43,18 +42,18 @@ public class RestProviderPublication : IProviderPublication
             expiry: expiry
         );
 
-        var message = await _providerApi.PostPublicationAsync( sessionId, restMessage );
+        var message = await ProtectedApiCallAsync( async () => await _providerApi.PostPublicationAsync( sessionId, restMessage ) );
 
         return new PublicationMessage( message.MessageId, messageContent, topics.ToArray(), expiry );
     }
 
     public async Task ExpirePublication(string sessionId, string messageId)
     {
-        await _providerApi.ExpirePublicationAsync( sessionId, messageId );
+        await ProtectedApiCallAsync( async () => await _providerApi.ExpirePublicationAsync( sessionId, messageId ) );
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await _providerApi.CloseSessionAsync(sessionId);
+        await ProtectedApiCallAsync( async () => await _providerApi.CloseSessionAsync(sessionId) );
     }
 }

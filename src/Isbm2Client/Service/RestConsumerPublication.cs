@@ -3,16 +3,18 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
+using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
-public class RestConsumerPublication : IConsumerPublication
+public class RestConsumerPublication : AbstractRestService, IConsumerPublication
 {
     private readonly RestApi.IConsumerPublicationServiceApi _consumerApi;
 
     public RestConsumerPublication(RestApi.IConsumerPublicationServiceApi consumerApi)
     {
         _consumerApi = consumerApi;
+        _consumerApi.ExceptionFactory = IsbmFaultRestExtensions.IsbmFaultFactory;
     }
 
     public async Task<PublicationConsumerSession> OpenSession(string channelUri, string topic, string? listenerUri = null)
@@ -31,16 +33,16 @@ public class RestConsumerPublication : IConsumerPublication
             ListenerUrl = listenerUri,
         };
 
-        var session = await _consumerApi.OpenSubscriptionSessionAsync( channelUri, sessionParams );
-
-        if ( session is null ) throw new Exception( "Uh oh" );
+        var session = await ProtectedApiCallAsync( async () => await _consumerApi.OpenSubscriptionSessionAsync( channelUri, sessionParams ) );
 
         return new PublicationConsumerSession( session.SessionId, sessionParams.ListenerUrl, sessionParams.Topics.ToArray(), Array.Empty<string>() );
     }
 
-    public async Task<PublicationMessage> ReadPublication(string sessionId)
+    public async Task<PublicationMessage?> ReadPublication(string sessionId)
     {
-        var response = await _consumerApi.ReadPublicationAsync( sessionId );
+        var response = await ProtectedApiCallAsync( async () => await _consumerApi.ReadPublicationAsync( sessionId ) );
+        if (response.NotFound()) return null;
+
         var content = response.MessageContent.Content.ActualInstance;
         var messageContent = Model.MessageContent.From( content );
 
@@ -49,11 +51,11 @@ public class RestConsumerPublication : IConsumerPublication
 
     public async Task RemovePublication(string sessionId)
     {
-        await _consumerApi.RemovePublicationAsync(sessionId);
+        await ProtectedApiCallAsync( async () => await _consumerApi.RemovePublicationAsync(sessionId) );
     }
 
     public async Task CloseSession(string sessionId)
     {
-        await _consumerApi.CloseSessionAsync(sessionId);
+        await ProtectedApiCallAsync( async () => await _consumerApi.CloseSessionAsync(sessionId) );
     }
 }
