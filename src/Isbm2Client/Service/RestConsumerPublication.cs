@@ -3,6 +3,7 @@ using Isbm2Client.Model;
 
 using RestApi = Isbm2RestClient.Api;
 using RestModel = Isbm2RestClient.Model;
+using Isbm2Client.Extensions;
 
 namespace Isbm2Client.Service;
 
