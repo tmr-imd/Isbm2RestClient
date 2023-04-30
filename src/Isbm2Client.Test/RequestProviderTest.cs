@@ -66,12 +66,13 @@ public class RequestProviderTest
 
         var provider = new RestProviderRequest(mock.Object);
 
-        RequestMessage request = await provider.ReadRequest(sessionId);
+        var request = await provider.ReadRequest(sessionId);
 
-        Assert.True(!string.IsNullOrEmpty(request.Id));
-        Assert.Equal(apiMessageYo.MessageId, request.Id);
+        Assert.True(!string.IsNullOrEmpty(request?.Id));
+        Assert.Equal(apiMessageYo.MessageId, request?.Id);
+        Assert.Equal("text/plain", request?.MessageContent.MediaType);
 
-        var content = request.MessageContent.Deserialise<string>();
+        var content = request?.MessageContent.Deserialise<string>();
 
         Assert.NotNull(content);
         Assert.Contains(YO, content);
@@ -101,12 +102,13 @@ public class RequestProviderTest
 
         var provider = new RestProviderRequest(mock.Object);
 
-        RequestMessage request = await provider.ReadRequest(sessionId);
+        var request = await provider.ReadRequest(sessionId);
 
-        Assert.True(!string.IsNullOrEmpty(request.Id));
-        Assert.Equal(apiMessageJson.MessageId, request.Id);
+        Assert.True(!string.IsNullOrEmpty(request?.Id));
+        Assert.Equal(apiMessageJson.MessageId, request?.Id);
+        Assert.Equal("application/json", request?.MessageContent.MediaType);
 
-        var content = request.MessageContent.Content;
+        var content = request?.MessageContent.Content;
 
         Assert.NotNull(content);
 
@@ -143,14 +145,15 @@ public class RequestProviderTest
 
         var provider = new RestProviderRequest(mock.Object);
 
-        RequestMessage request = await provider.ReadRequest(sessionId);
+        var request = await provider.ReadRequest(sessionId);
 
-        Assert.True(!string.IsNullOrEmpty(request.Id));
-        Assert.Equal(apiMessageTestObject.MessageId, request.Id);
+        Assert.True(!string.IsNullOrEmpty(request?.Id));
+        Assert.Equal(apiMessageTestObject.MessageId, request?.Id);
+        Assert.Equal("application/json", request?.MessageContent.MediaType);
 
-        var content = request.MessageContent.Deserialise<TestObject>();
+        var content = request?.MessageContent.Deserialise<TestObject>();
 
-        Assert.True(content.Weather["Hobart"] == 2);
+        Assert.True(content?.Weather["Hobart"] == 2);
     }
 
     [Fact]

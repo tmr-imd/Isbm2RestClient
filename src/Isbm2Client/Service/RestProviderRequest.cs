@@ -44,7 +44,7 @@ public class RestProviderRequest : AbstractRestService, IProviderRequest
         if (response.NotFound()) return null;
 
         var content = response.MessageContent.Content.ActualInstance;
-        var messageContent = MessageContent.From( content );
+        var messageContent = MessageContent.From( content, response.MessageContent.MediaType );
 
         return new RequestMessage( response.MessageId, messageContent, response.Topics.ToArray(), "" );
     }

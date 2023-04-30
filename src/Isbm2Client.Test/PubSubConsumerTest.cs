@@ -68,10 +68,11 @@ public class PubSubConsumerTest
         var consumer = new RestConsumerPublication(mock.Object);
 
         var message = await consumer.ReadPublication(sessionId);
-        Assert.True(!string.IsNullOrEmpty(message.Id));
+        Assert.True(!string.IsNullOrEmpty(message?.Id));
         Assert.IsType<PublicationMessage>(message);
+        Assert.Equal("text/plain", message?.MessageContent.MediaType);
 
-        var content = message.MessageContent.Deserialise<string>();
+        var content = message?.MessageContent.Deserialise<string>();
 
         Assert.NotNull(content);
         Assert.Contains(YO, content);
@@ -105,12 +106,13 @@ public class PubSubConsumerTest
         var consumer = new RestConsumerPublication(mock.Object);
 
         var message = await consumer.ReadPublication(sessionId);
-        Assert.True(!string.IsNullOrEmpty(message.Id));
+        Assert.True(!string.IsNullOrEmpty(message?.Id));
         Assert.IsType<PublicationMessage>(message);
 
-        var content = message.MessageContent.Content;
+        var content = message?.MessageContent.Content;
 
         Assert.NotNull(content);
+        Assert.Equal("application/json", message?.MessageContent.MediaType);
 
         if (content is not null)
             Assert.Contains("barney", content.RootElement.GetProperty("fred").GetString());
@@ -150,12 +152,13 @@ public class PubSubConsumerTest
         var message = await consumer.ReadPublication(sessionId);
         await consumer.RemovePublication(sessionId);
 
-        Assert.True(!string.IsNullOrEmpty(message.Id));
+        Assert.True(!string.IsNullOrEmpty(message?.Id));
         Assert.IsType<PublicationMessage>(message);
+        Assert.Equal("application/json", message?.MessageContent.MediaType);
 
-        var content = message.MessageContent.Deserialise<TestObject>();
+        var content = message?.MessageContent.Deserialise<TestObject>();
 
-        Assert.True(content.Weather["Hobart"] == 2);
+        Assert.True(content?.Weather["Hobart"] == 2);
     }
 
     [Fact]

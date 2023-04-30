@@ -6,9 +6,9 @@ namespace Isbm2Client.Model;
 
 public record class MessageContent( JsonDocument Content, string MediaType, string? ContentEncoding = null)
 {
-    public static MessageContent From<T>( T content ) where T : notnull
+    public static MessageContent From<T>( T content, string? overrideMediaType = null ) where T : notnull
     {
-        var mediaType = content switch
+        var mediaType = overrideMediaType ?? content switch
         {
             string => "text/plain",
             XDocument => "application/xml",
