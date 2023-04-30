@@ -97,13 +97,14 @@ public class RequestConsumerTest
 
         var consumer = new RestConsumerRequest(mock.Object);
 
-        ResponseMessage response = await consumer.ReadResponse(sessionId, requestId);
+        var response = await consumer.ReadResponse(sessionId, requestId);
 
-        Assert.True(!string.IsNullOrEmpty(response.Id));
-        Assert.Equal( apiMessageCarrot.MessageId, response.Id );
-        Assert.Equal( requestId, response.RequestMessageId );
+        Assert.True(!string.IsNullOrEmpty(response?.Id));
+        Assert.Equal( apiMessageCarrot.MessageId, response?.Id );
+        Assert.Equal( requestId, response?.RequestMessageId );
+        Assert.Equal("text/plain", response?.MessageContent.MediaType);
 
-        var content = response.MessageContent.Deserialise<string>();
+        var content = response?.MessageContent.Deserialise<string>();
 
         Assert.NotNull(content);
         Assert.Contains(CARROTS, content);

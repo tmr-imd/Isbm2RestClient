@@ -75,7 +75,7 @@ public class RestConsumerRequest : AbstractRestService, IConsumerRequest
         if (response.NotFound()) return null;
 
         var content = response.MessageContent.Content.ActualInstance;
-        var messageContent = Model.MessageContent.From( content );
+        var messageContent = Model.MessageContent.From( content, response.MessageContent.MediaType );
 
         return new ResponseMessage( response.MessageId, messageContent, response.RequestMessageId ?? requestMessageId );
     }
