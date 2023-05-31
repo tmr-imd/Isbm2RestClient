@@ -24,7 +24,19 @@ public class RestProviderRequest : AbstractRestService, IProviderRequest
         return OpenSession( channelUrl, topics );
     }
 
-    public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics) 
+    public Task<RequestProviderSession> OpenSession(string channelUrl, string topic, string listenerUrl)
+    {
+        var topics = new[] { topic };
+
+        return OpenSession(channelUrl, topics, listenerUrl);
+    }
+
+    public Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics)
+    {
+        return OpenSession( channelUrl, topics, "" );
+    }
+
+    public async Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics, string listenerUrl) 
     {
         var sessionParams = new RestModel.Session()
         {
@@ -32,6 +44,11 @@ public class RestProviderRequest : AbstractRestService, IProviderRequest
             Topics = topics.ToList(),
             FilterExpressions = new List<RestModel.FilterExpression>()
         };
+
+        if ( !string.IsNullOrEmpty(listenerUrl) )
+        {
+            sessionParams.ListenerUrl = listenerUrl;
+        }
 
         var session = await ProtectedApiCallAsync( async () => await _requestApi.OpenProviderRequestSessionAsync( channelUrl, sessionParams ) );
 
