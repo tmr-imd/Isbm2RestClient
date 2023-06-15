@@ -4,7 +4,9 @@ namespace Isbm2Client.Interface;
 
 public interface IProviderRequest {
     Task<RequestProviderSession> OpenSession( string channelUri, string topic );
+    Task<RequestProviderSession> OpenSession(string channelUri, string topic, string listenerUrl);
     Task<RequestProviderSession> OpenSession( string channelUrl, IEnumerable<string> topics );
+    Task<RequestProviderSession> OpenSession(string channelUrl, IEnumerable<string> topics, string listenerUrl);
 
     Task<RequestMessage?> ReadRequest(string sessionId);
     Task RemoveRequest(string sessionId);
