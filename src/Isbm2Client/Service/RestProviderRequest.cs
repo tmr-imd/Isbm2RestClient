@@ -24,7 +24,7 @@ public class RestProviderRequest : AbstractRestService, IProviderRequest
         return OpenSession( channelUrl, topics );
     }
 
-    public Task<RequestProviderSession> OpenSession(string channelUrl, string topic, string listenerUrl)
+    public Task<RequestProviderSession> OpenSession(string channelUrl, string topic, string listenerUrl = "")
     {
         var topics = new[] { topic };
 
