@@ -455,7 +455,8 @@ namespace Isbm2RestClient.Client
                 CookieContainer = cookies,
                 MaxTimeout = configuration.Timeout,
                 Proxy = configuration.Proxy,
-                UserAgent = configuration.UserAgent
+                UserAgent = configuration.UserAgent,
+                RemoteCertificateValidationCallback = configuration.ServerCertificateValidationCallback
             };
 
             RestClient client = new RestClient(clientOptions)
@@ -550,7 +551,8 @@ namespace Isbm2RestClient.Client
                 ClientCertificates = configuration.ClientCertificates,
                 MaxTimeout = configuration.Timeout,
                 Proxy = configuration.Proxy,
-                UserAgent = configuration.UserAgent
+                UserAgent = configuration.UserAgent,
+                RemoteCertificateValidationCallback = configuration.ServerCertificateValidationCallback
             };
 
             RestClient client = new RestClient(clientOptions)

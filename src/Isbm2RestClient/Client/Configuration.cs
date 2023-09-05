@@ -19,6 +19,7 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Net.Http;
+using System.Net.Security;
 
 namespace Isbm2RestClient.Client
 {
@@ -293,6 +294,11 @@ namespace Isbm2RestClient.Client
         /// </summary>
         /// <value>X509 Certificate collection.</value>
         public X509CertificateCollection ClientCertificates { get; set; }
+
+        /// <summary>
+        /// Gets or sets the callback function for handling the validation of remote certificates.
+        /// </summary>
+        public virtual RemoteCertificateValidationCallback? ServerCertificateValidationCallback { get; set; }
 
         /// <summary>
         /// Gets or sets the access token for OAuth2 authentication.
@@ -619,6 +625,7 @@ namespace Isbm2RestClient.Client
                 TempFolderPath = second.TempFolderPath ?? first.TempFolderPath,
                 DateTimeFormat = second.DateTimeFormat ?? first.DateTimeFormat,
                 ClientCertificates = second.ClientCertificates ?? first.ClientCertificates,
+                ServerCertificateValidationCallback = second.ServerCertificateValidationCallback ?? first.ServerCertificateValidationCallback,
             };
             return config;
         }
