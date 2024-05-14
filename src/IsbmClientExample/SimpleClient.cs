@@ -8,39 +8,49 @@ using Isbm2RestClient.Model;
 
 using Newtonsoft.Json;
 
-namespace SimpleIsbm2 {
+namespace SimpleIsbm2;
 
-class SimpleClient {
+class SimpleClient
+{
 
     public Configuration ClientConfig { get; private set; }
 
     private ChannelManagementApi _channelApi;
     private ConsumerPublicationServiceApi _subscriberApi;
     private ProviderPublicationServiceApi _publisherApi;
+    private ConsumerRequestServiceApi _requestApi;
+    private ProviderRequestServiceApi _responseApi;
 
-    public SimpleClient(Configuration config) {
+    public SimpleClient(Configuration config)
+    {
         ClientConfig = config;
         _channelApi = new ChannelManagementApi(config);
         _subscriberApi = new ConsumerPublicationServiceApi(config);
         _publisherApi = new ProviderPublicationServiceApi(config);
+        _requestApi = new ConsumerRequestServiceApi(config);
+        _responseApi = new ProviderRequestServiceApi(config);
     }
 
-    public Channel CreateChannel(string channelUri, ChannelType channelType, string description) {
+    public Channel CreateChannel(string channelUri, ChannelType channelType, string description)
+    {
         var toBeChannel = new Channel(channelUri, channelType, description);
         Console.WriteLine("    {0}", toBeChannel.ToJson().ReplaceLineEndings("\n    "));
         return _channelApi.CreateChannel(toBeChannel);
     }
 
-    public void DeleteChannel(string channelUri) {
+    public void DeleteChannel(string channelUri)
+    {
         Console.WriteLine("Deleting channel {0}", channelUri);
         _channelApi.DeleteChannel(channelUri);
     }
 
-    public Channel GetChannel(string channelUri) {
+    public Channel GetChannel(string channelUri)
+    {
         return _channelApi.GetChannel(channelUri);
     }
 
-    public Session OpenSubscriptionSession(string channelUri, IEnumerable<string> topics, string? listenerUrl = default(string?)) {
+    public Session OpenSubscriptionSession(string channelUri, IEnumerable<string> topics, string? listenerUrl = default(string?))
+    {
         var subscriptionParams = new Session(topics: new List<string>(topics), listenerUrl: listenerUrl);
         Console.WriteLine("\nOpening subscription session:\n    {0}", subscriptionParams.ToJson().ReplaceLineEndings("\n    "));
         var subscription = _subscriberApi.OpenSubscriptionSession(channelUri, subscriptionParams);
@@ -50,14 +60,40 @@ class SimpleClient {
         return subscription;
     }
 
-    public Session OpenPublicationSession(string channelUri) {
+    public Session OpenPublicationSession(string channelUri)
+    {
         var session = _publisherApi.OpenPublicationSession(channelUri);
         session.SessionType = SessionType.PublicationProvider;
         return session;
     }
 
-    public Message PostPublication<T>(string sessionId, T content, IEnumerable<string> topics, string? expiry = default(string)) where T : notnull {
-        try {
+    public Session OpenResponseSession(string channelUri, IEnumerable<string> topics, string? listenerUrl = default)
+    {
+        var sessionParams = new Session(topics: new List<string>(topics), listenerUrl: listenerUrl);
+        var session = _responseApi.OpenProviderRequestSession(channelUri, sessionParams);
+        session.SessionType = SessionType.RequestProvider;
+        session.Topics = sessionParams.Topics;
+        session.ListenerUrl = sessionParams.ListenerUrl;
+        return session;
+    }
+
+    public Session OpenRequestSession(string channelUri, string? listenerUrl = default)
+    {
+        var sessionParams = new Session(listenerUrl: listenerUrl);
+        var session = _requestApi.OpenConsumerRequestSession(channelUri, sessionParams);
+        session.SessionType = SessionType.RequestConsumer;
+        return session;
+    }
+
+    public void CloseSubscriptionSession(string sessionId) => _subscriberApi.CloseSession(sessionId);
+    public void ClosePublicationSession(string sessionId) => _subscriberApi.CloseSession(sessionId);
+    public void CloseRequestSession(string sessionId) => _subscriberApi.CloseSession(sessionId);
+    public void CloseResponseSession(string sessionId) => _subscriberApi.CloseSession(sessionId);
+
+    public Message PostPublication<T>(string sessionId, T content, IEnumerable<string> topics, string? expiry = default(string)) where T : notnull
+    {
+        try
+        {
             MessageContent messageContent = CommonMessageContent.From(content).ToRestMessageContent();
 
             var publicationParams = new Message(messageContent: messageContent, topics: new List<string>(topics), expiry: expiry, messageType: MessageType.Publication);
@@ -67,39 +103,48 @@ class SimpleClient {
             publicationParams.MessageId = publication.MessageId;
             return publicationParams;
         }
-        catch (Exception e) when (e switch { NotImplementedException => true, InvalidCastException => true, System.NotSupportedException => true, _ => false }) {
+        catch (Exception e) when (e switch { NotImplementedException => true, InvalidCastException => true, System.NotSupportedException => true, _ => false })
+        {
             throw new ArgumentException("Message content must be a string, a JSONDocument, or an object that can be serialised to JSON using System.Text.Json.JsonSerializer.SerializeToDocument");
         }
     }
 
-    public Message? ReadPublication(string sessionId) {
+    public Message? ReadPublication(string sessionId)
+    {
         Console.WriteLine("Reading publication from {0}", sessionId);
-        try {
+        try
+        {
             var message = _subscriberApi.ReadPublication(sessionId);
-            if (message == null) {
+            if (message == null)
+            {
                 throw new InvalidDataException("Unexpected failure deserialising read message. Message is null.");
             }
             message.MessageType = MessageType.Publication;
             return message;
         }
-        catch (ApiException readError) {
+        catch (ApiException readError)
+        {
             if (readError.ErrorCode == 404) return null;
             else throw readError;
         }
     }
 
-    public bool? RemovePublication(string sessionId) {
+    public bool? RemovePublication(string sessionId)
+    {
         Console.WriteLine("Removing publication from {0}", sessionId);
         _subscriberApi.RemovePublication(sessionId);
         return true; // XXX: can try checking the count header field.
     }
 
-    public IEnumerable<Message> ReadAllPublications(string sessionId) {
+    public IEnumerable<Message> ReadAllPublications(string sessionId)
+    {
         List<Message> messages = new List<Message>();
         var readNext = true;
-        while (readNext) {
+        while (readNext)
+        {
             var message = ReadPublication(sessionId);
-            if (readNext = message != null && (messages.Count == 0 || messages[messages.Count - 1].MessageId != message.MessageId)) {
+            if (readNext = message != null && (messages.Count == 0 || messages[messages.Count - 1].MessageId != message.MessageId))
+            {
                 messages.Add(message ?? new Message());
                 RemovePublication(sessionId);
             }
@@ -107,6 +152,4 @@ class SimpleClient {
         Console.WriteLine("Read {0} publication{1}", messages.Count, messages.Count == 1 ? "" : "s");
         return messages;
     }
-}
-
 }

@@ -13,6 +13,23 @@
             "stopAtEntry": false
         },
         {
+            "name": ".Net Core Launch Blazor",
+            "type": "coreclr",
+            "console": "internalConsole",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/BlazorServerExample/bin/x64/Debug/net6.0/win10-x64/BlazorServerExample.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/BlazorServerExample",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/BlazorExampleServer/Pages"
+            }
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"

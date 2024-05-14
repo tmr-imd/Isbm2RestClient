@@ -3,6 +3,10 @@ using System.Diagnostics;
 using Isbm2RestClient.Api;
 using Isbm2RestClient.Client;
 using Isbm2RestClient.Model;
+using System.Text.Json;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.Security;
 
 Trace.Listeners.Add(new ConsoleTraceListener());
 
@@ -12,11 +16,16 @@ Dictionary<string, string> options = new Dictionary<string, string>();
 var channelUri = "/example/test_channel/publish";
 var topics = new List<string>(new string[]{"Test Topic"});
 
-Configuration config = new Configuration();
-config.BasePath = "https://isbm.lab.oiiecosystem.net/rest";
-// Configure HTTP basic authorization: username_password
-config.Username = "YOUR_USERNAME";
-config.Password = "YOUR_PASSWORD";
+Configuration config = new()
+{
+    BasePath = "https://isbm.lab.oiiecosystem.net/rest",
+    // Configure HTTP basic authorization: username_password
+    Username = "YOUR_USERNAME",
+    Password = "YOUR_PASSWORD",
+    // Accept all SSL certificates with chain errors for the moment (we are not configuring any root certificates, so internal certificates cause failure)
+    ServerCertificateValidationCallback = (object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors) => 
+        sslPolicyErrors == SslPolicyErrors.None || sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors
+};
 
 // Reusable methods
 var printUsage = () => {
@@ -39,9 +48,16 @@ var validateOperation = (string operation) => {
     case "create-channel":
     case "delete-channel":
     case "subscribe":
+    case "cancel-subscription":
     case "open-publication-session":
+    case "close-publication-session":
     case "post":
     case "read":
+    case "open-request-session":
+    case "close-request-session":
+    case "open-response-session":
+    case "close-response-session":
+    case "close-sessions":
         return true;
     }
     return false;
@@ -74,6 +90,29 @@ optionsForOperations["subscribe"] = (string[] arguments, int start) => {
     }
     return options;
 };
+optionsForOperations["cancel-subscription"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("SessionId")) {
+            options["SessionId"] = arguments[i];
+            break;
+        }
+    }
+    return options;
+};
+optionsForOperations["close-publication-session"] = optionsForOperations["cancel-subscription"];
+optionsForOperations["close-request-session"] = optionsForOperations["cancel-subscription"];
+optionsForOperations["close-response-session"] = optionsForOperations["cancel-subscription"];
+optionsForOperations["close-sessions"] = (string[] arguments, int start) => {
+    var options = new Dictionary<string, string>();
+    for (int i = start; i < arguments.Length; ++i) {
+        if (!options.ContainsKey("FilePath")) {
+            options["FilePath"] = arguments[i];
+            break;
+        }
+    }
+    return options;
+};
 optionsForOperations["open-publication-session"] = (string[] arguments, int start) => {
     var options = new Dictionary<string, string>();
     for (int i = start; i < arguments.Length; ++i) {
@@ -84,6 +123,8 @@ optionsForOperations["open-publication-session"] = (string[] arguments, int star
     }
     return options;
 };
+optionsForOperations["open-response-session"] = optionsForOperations["subscribe"];
+optionsForOperations["open-request-session"] = optionsForOperations["open-publication-session"]; // although will need to support listener URL later
 optionsForOperations["post"] = (string[] arguments, int start) => {
     var options = new Dictionary<string, string>();
     for (int i = start; i < arguments.Length; ++i) {
@@ -139,8 +180,26 @@ methodsForOperations["subscribe"] = (Dictionary<string, string> options, SimpleI
 };
 methodsForOperations["cancel-subscription"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
     Console.Write("Closing subscription {0}...", options["SessionId"]);
-    Console.WriteLine("Not Yet Implemented");
-    // client.CloseSubscriptionSession(options["SessionId"]);
+    client.CloseSubscriptionSession(options["SessionId"]);
+    Console.WriteLine("Done");
+};
+methodsForOperations["close-sessions"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Closing sessions from file {0}...", options["FilePath"]);
+    var sessions = new List<string>();
+    using (var file = new FileStream(options["FilePath"], FileMode.Open))
+    {
+        sessions = JsonSerializer.Deserialize<List<string>>(JsonDocument.Parse(file));
+    }
+    sessions?.ForEach(s => {
+        Console.Write("Closing session {0}...", s);
+        try {
+            client.CloseSubscriptionSession(s);
+            Console.WriteLine("Done");
+        } catch (Exception e)
+        {
+            Console.WriteLine("Failed with {0}", e.Message);
+        }
+    });
     Console.WriteLine("Done");
 };
 methodsForOperations["open-publication-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
@@ -150,8 +209,27 @@ methodsForOperations["open-publication-session"] = (Dictionary<string, string> o
 };
 methodsForOperations["close-publication-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
     Console.Write("Closing publication session {0}...", options["SessionId"]);
-    Console.WriteLine("Not Yet Implemented");
-    // client.ClosePublicationSession(options["SessionId"]);
+    client.ClosePublicationSession(options["SessionId"]);
+    Console.WriteLine("Done");
+};
+methodsForOperations["open-response-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Preparing to receive requests to {0} on {1}", options["Topics"], channelUri);
+    var session = client.OpenResponseSession(channelUri, options["Topics"].Split(","));
+    Console.WriteLine("Response session opened:\n    {0}", session.ToJson().ReplaceLineEndings("\n    "));
+};
+methodsForOperations["close-response-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.Write("Closing response session {0}...", options["SessionId"]);
+    client.CloseResponseSession(options["SessionId"]);
+    Console.WriteLine("Done");
+};
+methodsForOperations["open-request-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.WriteLine("Preparing to post requests on {0}", channelUri);
+    var session = client.OpenRequestSession(channelUri);
+    Console.WriteLine("Request session opened:\n    {0}", session.ToJson().ReplaceLineEndings("\n    "));
+};
+methodsForOperations["close-request-session"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
+    Console.Write("Closing request session {0}...", options["SessionId"]);
+    client.CloseRequestSession(options["SessionId"]);
     Console.WriteLine("Done");
 };
 methodsForOperations["post"] = (Dictionary<string, string> options, SimpleIsbm2.SimpleClient client) => {
